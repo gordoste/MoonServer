@@ -1,0 +1,158 @@
+﻿@model IEnumerable<MoonServer.Models.Problem>
+
+@{
+    ViewBag.Title = "MoonBoard Problems";
+}
+
+<div class="filters button-group">
+    <button class="button is-checked" data-filter="grade:*">show all</button>
+    @foreach (var g in (List<string>)(HttpRuntime.Cache.Get(Constants.GradeKey)))
+    {
+        <button class="button" data-filter="grade:@g">@g</button>
+    }
+</div>
+
+<div class="filters button-group">
+    <button class="button is-checked" data-filter="repeats:*">show all</button>
+    @foreach (var i in Constants.RepeatThresholds)
+    {
+        if (i > 0)
+        {
+            <button class="button" data-filter="repeats:@i">@i+ repeat@(i>1?"s":"")</button>
+        }
+    }
+</div>
+
+<div class="filters button-group">
+    <button class="button is-checked" data-filter="rating:*">show all</button>
+    @foreach (var i in Constants.Ratings)
+    {
+        if (i > 0)
+        {
+    <button class="button" data-filter="rating:@i">@i star@(i>1?"s":"")</button>
+        }
+    }
+</div>
+
+<div class="filters button-group">
+    <button class="button is-checked" data-filter="benchmark:*">show all</button>
+    <button class="button" data-filter="benchmark:B">benchmark only</button>
+</div>
+
+<div class="filters form-text"><input type="text" maxlength="20" id="namefilter"/></div>
+
+<div id="sorts" class="button-group">
+    <button class="button is-checked" data-sort-by="original-order">original order</button>
+    <button class="button" data-sort-by="name">name</button>
+    <button class="button" data-sort-by="grade">grade</button>
+    <button class="button" data-sort-by="rating">rating</button>
+    <button class="button" data-sort-by="repeats">repeats</button>
+</div>
+
+<div class="grid">
+    @foreach (var item in Model)
+    {
+    <div class="element-item @item.Grade.AmericanName">
+        <h3 class="name">@Html.DisplayFor(modelItem => item.Name)</h3>
+        <p class="grade">@item.Grade.AmericanName</p>
+        <p class="repeats">@item.Repeats</p>
+        <p class="rating">@item.Rating</p>
+        <div class="benchmark">@( item.IsBenchmark ? "B" : "" )</div>
+    </div>
+    }
+</div>
+
+@section scripts {
+    <script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.js"></script>
+
+    <script language="javascript">
+        var filterFns = {
+            grade: function (elem) {
+                return $(elem).find('.grade').text() == filters["grade"];
+            },
+            name: function (elem) {
+                return $(elem).find('.name').text().toLowerCase()
+                    .startsWith(filters["name"].toLowerCase());
+            },
+            repeats: function (elem) {
+                return parseInt($(elem).find('.repeats').text()) > parseInt(filters["repeats"]);
+            },
+            rating: function (elem) {
+                return parseInt($(elem).find('.rating').text()) > parseInt(filters["rating"]);
+            },
+            benchmark: function (elem) {
+                return $(elem).find('.benchmark').text() == "B";
+            }
+        };
+
+        var filters = {}; // No filters at the start
+        var filterFn = function () {
+            for (var key in filters) {
+                var fn = filterFns[key];
+                if (!fn(this)) { return false; }
+            }
+            return true;
+        };
+
+        // init Isotope
+        var $grid = $('.grid').isotope({
+            itemSelector: '.element-item',
+            layoutMode: 'fitRows',
+            transitionDuration: 0,
+            filter: filterFn,
+            getSortData: {
+                name: '.name',
+                grade: function (elem) { return parseInt($(elem).find('.grade').text().replace(/V/g, '')); },
+                rating: '.rating parseInt',
+                repeats: '.repeats parseInt'
+            },
+            sortAscending: {
+                name: true,
+                grade: true,
+                rating: false,
+                repeats: false
+            }
+        });
+
+        // bind filter button click
+        $('.filters').on('click', 'button', function () {
+            var filterParts = $(this).attr('data-filter').split(':');
+            if (filterParts[1] == "*") {
+                delete filters[filterParts[0]];
+            } else {
+                filters[filterParts[0]] = filterParts[1];
+            }
+            $grid.isotope({ filter: filterFn });
+        });
+
+        // Set up a trigger on key press which will apply filter after 1 second
+        // Timer restarts if another key press occurs
+        var nameFilterTimeout = null;
+        $('#namefilter').on('keyup', function () {
+            var that = this;
+            if (nameFilterTimeout !== null) {
+                clearTimeout(nameFilterTimeout);
+            }
+            nameFilterTimeout = setTimeout(function () {
+                filters['name'] = $(that).val();
+                $grid.isotope({ filter: filterFn });
+            }, 1000);
+        });
+
+        // bind sort button click
+        $('#sorts').on( 'click', 'button', function() {
+          var sortByValue = $(this).attr('data-sort-by');
+          $grid.isotope({ sortBy: sortByValue });
+        });
+
+        // change is-checked class on buttons
+        $('.button-group').each(function (i, buttonGroup) {
+            var $buttonGroup = $(buttonGroup);
+            $buttonGroup.on('click', 'button', function () {
+                $buttonGroup.find('.is-checked').removeClass('is-checked');
+                $(this).addClass('is-checked');
+            });
+        });
+
+    </script>
+}

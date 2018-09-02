@@ -1,0 +1,10 @@
+{
+  "name": "moonserver",
+  "version": "1.0.0",
+  "description": "Moonboard web server",
+  "license": "MIT",
+  "repository": " ",
+  "devDependencies": {
+    "isotope-layout": "^3.0.6"
+  }
+}
