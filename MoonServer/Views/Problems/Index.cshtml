@@ -14,22 +14,22 @@
 
 <div class="filters button-group">
     <button class="button is-checked" data-filter="repeats:*">show all</button>
-    @foreach (var i in Constants.RepeatThresholds)
+    @foreach (var i in Constants.getFilter("repeats").Categories)
     {
         if (i > 0)
         {
-            <button class="button" data-filter="repeats:@i">@i+ repeat@(i>1?"s":"")</button>
+            <button class="button" data-filter="repeats:@i">@i+ repeat@(i > 1 ? "s" : "")</button>
         }
     }
 </div>
 
 <div class="filters button-group">
     <button class="button is-checked" data-filter="rating:*">show all</button>
-    @foreach (var i in Constants.Ratings)
+    @foreach (var i in Constants.getFilter("rating").Categories)
     {
         if (i > 0)
         {
-    <button class="button" data-filter="rating:@i">@i star@(i>1?"s":"")</button>
+            <button class="button" data-filter="rating:@i">@i star@(i > 1 ? "s" : "")</button>
         }
     }
 </div>
@@ -39,7 +39,7 @@
     <button class="button" data-filter="benchmark:B">benchmark only</button>
 </div>
 
-<div class="filters form-text"><input type="text" maxlength="20" id="namefilter"/></div>
+<div class="filters form-text"><input type="text" maxlength="20" id="namefilter" /></div>
 
 <div id="sorts" class="button-group">
     <button class="button is-checked" data-sort-by="original-order">original order</button>
@@ -52,15 +52,17 @@
 <div class="grid">
     @foreach (var item in Model)
     {
-    <div class="element-item @item.Grade.AmericanName">
-        <h3 class="name">@Html.DisplayFor(modelItem => item.Name)</h3>
-        <p class="grade">@item.Grade.AmericanName</p>
-        <p class="repeats">@item.Repeats</p>
-        <p class="rating">@item.Rating</p>
-        <div class="benchmark">@( item.IsBenchmark ? "B" : "" )</div>
-    </div>
+        <div class="element-item @item.Grade.AmericanName">
+            <h3 class="name">@Html.DisplayFor(modelItem => item.Name)</h3>
+            <p class="grade">@item.Grade.AmericanName</p>
+            <p class="repeats">@item.Repeats</p>
+            <p class="rating">@item.Rating</p>
+            <div class="benchmark">@( item.IsBenchmark ? "B" : "" )</div>
+        </div>
     }
 </div>
+
+<div id="datagetter" class="button">Get Data</div>
 
 @section scripts {
     <script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.js"></script>
@@ -95,24 +97,27 @@
         };
 
         // init Isotope
-        var $grid = $('.grid').isotope({
-            itemSelector: '.element-item',
-            layoutMode: 'fitRows',
-            transitionDuration: 0,
-            filter: filterFn,
-            getSortData: {
-                name: '.name',
-                grade: function (elem) { return parseInt($(elem).find('.grade').text().replace(/V/g, '')); },
-                rating: '.rating parseInt',
-                repeats: '.repeats parseInt'
-            },
-            sortAscending: {
-                name: true,
-                grade: true,
-                rating: false,
-                repeats: false
-            }
-        });
+        var $grid = $('.grid');
+        function initGrid() {
+            $grid = $('.grid').isotope({
+                itemSelector: '.element-item',
+                layoutMode: 'fitRows',
+                transitionDuration: 0,
+                filter: filterFn,
+                getSortData: {
+                    name: '.name',
+                    grade: function (elem) { return parseInt($(elem).find('.grade').text().replace(/V/g, '')); },
+                    rating: '.rating parseInt',
+                    repeats: '.repeats parseInt'
+                },
+                sortAscending: {
+                    name: true,
+                    grade: true,
+                    rating: false,
+                    repeats: false
+                }
+            });
+        };
 
         // bind filter button click
         $('.filters').on('click', 'button', function () {
@@ -151,6 +156,31 @@
             $buttonGroup.on('click', 'button', function () {
                 $buttonGroup.find('.is-checked').removeClass('is-checked');
                 $(this).addClass('is-checked');
+            });
+        });
+
+        $('#datagetter').on('click', function () {
+            var filter = { grade: "V6", repeats: "50" };
+            $.ajax({
+                type: 'POST',
+                data: JSON.stringify(filter),
+                url: "/api/Problems",
+                contentType: 'application/json'
+            })
+                .done(function (data) {
+                    $grid.remove('.element-item');
+                    for (var i = 0; i < data.length; i++) {
+                        var prob = data[i];
+                        var probDiv = '<div class="element-item ' + prob.GradeName + '">' +
+                            '<h3 class="name">' + prob.Name + '</h3>' +
+                            '<p class="grade">' + prob.GradeName + '</p>' +
+                            '<p class="repeats">' + prob.Repeats + '</p>' +
+                            '<p class="rating">' + prob.Rating + '</p>' +
+                            '<div class="benchmark">' + (prob.IsBenchmark ? "B" : "") + '</div>' +
+                            '</div>';
+                        $grid.append(probDiv);
+                    }
+                    initGrid();
             });
         });
 

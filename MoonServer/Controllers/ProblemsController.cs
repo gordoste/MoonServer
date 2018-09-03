@@ -1,6 +1,7 @@
 ﻿using MoonServer.Models;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web;
@@ -11,7 +12,13 @@ namespace MoonServer.Controllers
     public class ProblemsController : BaseController
     {
         // GET: Problems
-        public async Task<ActionResult> Index(string name, string grade, int? rating, int? repeats, bool? isBenchmark)
+        public ActionResult Index()
+        {
+            return View(new List<Problem>());
+        }
+
+        // GET: Problems
+        public async Task<ActionResult> IndexParam(string name, string grade, int? rating, int? repeats, bool? isBenchmark)
         {
             // Validate grade parameter
             if (grade != null)
