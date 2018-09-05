@@ -17,12 +17,19 @@ namespace MoonServer.Controllers
         public string Benchmark { get; set; }
     }
 
+    public class ProblemResponse
+    {
+        public IEnumerable<ProblemProxy> Problems;
+        public HttpStatusCode Status;
+        public string Message;
+    }
+
     public class ProblemsAPIController : ApiController
     {
         // POST api/Problems
         [HttpPost]
         [Route("api/Problems")]
-        public JsonResult<IEnumerable<ProblemProxy>> Post([FromBody] ProblemViewModel probVM)
+        public JsonResult<ProblemResponse> Post([FromBody] ProblemViewModel probVM)
         {
             Dictionary<string, string> filtVals = new Dictionary<string, string>();
             foreach (var f in Constants.config.Filters)
@@ -38,8 +45,16 @@ namespace MoonServer.Controllers
             }
             string fname = Constants.getString("CacheDir") + "\\" +
                 string.Join("_", filtParts) + ".json";
+            if (!File.Exists(fname))
+            {
+                return Json(new ProblemResponse { Status = HttpStatusCode.NotFound, Message = "Cannot find file." });
+            }
             IEnumerable<ProblemProxy> problems = JsonConvert.DeserializeObject<List<ProblemProxy>>(File.ReadAllText(fname));
-            return Json(problems);
+            if (problems.Count() > int.Parse(Constants.getString("MaxProblemsReturned")))
+            {
+                return Json(new ProblemResponse { Status = HttpStatusCode.Forbidden, Message = Constants.getString("TooManyProblemsMsg") });
+            }
+            return Json(new ProblemResponse { Status = HttpStatusCode.OK, Problems = problems });
         }
     }
 }

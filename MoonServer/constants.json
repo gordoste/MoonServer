@@ -1,7 +1,9 @@
 {
   "Strings": {
     "AllFilterName": "X",
-    "CacheDir": "C:\\Users\\gordoste\\Downloads\\moonboard\\json\\cache"
+    "CacheDir": "C:\\Users\\gordoste\\Downloads\\moonboard\\json\\cache",
+    "MaxProblemsReturned": 500,
+    "TooManyProblemsMsg":  "Too many problems"
   },
   "Filters": [
     {

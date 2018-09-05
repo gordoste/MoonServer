@@ -185,6 +185,7 @@
     </Compile>
     <Compile Include="Models\EndProblemPosition.cs" />
     <Compile Include="Models\Grade.cs" />
+    <Compile Include="Models\GradeComparer.cs" />
     <Compile Include="Models\Hold.cs" />
     <Compile Include="Models\HoldPlacement.cs" />
     <Compile Include="Models\HoldSetup.cs" />

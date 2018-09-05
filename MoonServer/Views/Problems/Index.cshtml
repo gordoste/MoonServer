@@ -2,11 +2,13 @@
 
 @{
     ViewBag.Title = "MoonBoard Problems";
+    List<string> gradeList = (List<string>)(HttpRuntime.Cache.Get(Constants.GradeKey));
+    gradeList.Sort(new MoonServer.Models.GradeComparer());
 }
 
 <div class="filters button-group">
     <button class="button is-checked" data-filter="grade:*">show all</button>
-    @foreach (var g in (List<string>)(HttpRuntime.Cache.Get(Constants.GradeKey)))
+    @foreach (var g in gradeList)
     {
         <button class="button" data-filter="grade:@g">@g</button>
     }
@@ -50,16 +52,6 @@
 </div>
 
 <div class="grid">
-    @foreach (var item in Model)
-    {
-        <div class="element-item @item.Grade.AmericanName">
-            <h3 class="name">@Html.DisplayFor(modelItem => item.Name)</h3>
-            <p class="grade">@item.Grade.AmericanName</p>
-            <p class="repeats">@item.Repeats</p>
-            <p class="rating">@item.Rating</p>
-            <div class="benchmark">@( item.IsBenchmark ? "B" : "" )</div>
-        </div>
-    }
 </div>
 
 <div id="datagetter" class="button">Get Data</div>
@@ -98,7 +90,7 @@
 
         // init Isotope
         var $grid = $('.grid');
-        function initGrid() {
+        function updateGrid() {
             $grid = $('.grid').isotope({
                 itemSelector: '.element-item',
                 layoutMode: 'fitRows',
@@ -160,7 +152,7 @@
         });
 
         $('#datagetter').on('click', function () {
-            var filter = { grade: "V6", repeats: "50" };
+            var filter = { };
             $.ajax({
                 type: 'POST',
                 data: JSON.stringify(filter),
@@ -168,19 +160,30 @@
                 contentType: 'application/json'
             })
                 .done(function (data) {
-                    $grid.remove('.element-item');
-                    for (var i = 0; i < data.length; i++) {
-                        var prob = data[i];
-                        var probDiv = '<div class="element-item ' + prob.GradeName + '">' +
-                            '<h3 class="name">' + prob.Name + '</h3>' +
-                            '<p class="grade">' + prob.GradeName + '</p>' +
-                            '<p class="repeats">' + prob.Repeats + '</p>' +
-                            '<p class="rating">' + prob.Rating + '</p>' +
-                            '<div class="benchmark">' + (prob.IsBenchmark ? "B" : "") + '</div>' +
-                            '</div>';
-                        $grid.append(probDiv);
+                    if (data['Status'] == 200) {
+                        $grid.remove('.element-item');
+                        for (var i = 0; i < data['Problems'].length; i++) {
+                            var prob = data['Problems'][i];
+                            var probDiv = '<div class="element-item ' + prob.GradeName + '">' +
+                                '<h3 class="name">' + prob.Name + '</h3>' +
+                                '<p class="grade">' + prob.GradeName + '</p>' +
+                                '<p class="repeats">' + prob.Repeats + '</p>' +
+                                '<p class="rating">' + prob.Rating + '</p>' +
+                                '<div class="benchmark">' + (prob.IsBenchmark ? "B" : "") + '</div>' +
+                                '</div>';
+                            $grid.append(probDiv);
+                        }
+                        updateGrid();
                     }
-                    initGrid();
+                    else {
+                        if (!data['Message']) { data['Message'] = 'Unknown'; }
+                        if (data['Status'] == 403 && data['Message'] == "@Constants.getString("TooManyProblemsMsg")") {
+                            alert("Too many problems, apply more filters");
+                        }
+                        else {
+                            alert("HTTP code " + data['Status'] + ": " + data['Message']);
+                        }
+                    }
             });
         });
 
