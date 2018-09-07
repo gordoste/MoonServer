@@ -4,7 +4,6 @@ namespace MoonServer.Models
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
-    using System.Data.Entity.Spatial;
 
     public partial class Grade
     {
@@ -27,5 +26,24 @@ namespace MoonServer.Models
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Problem> Problems { get; set; }
+    }
+
+    public class AmericanGradeComparer : IComparer<string>
+    {
+        private bool Ascending { get; set; }
+        public AmericanGradeComparer(bool Ascending = true)
+        {
+            this.Ascending = Ascending;
+        }
+        public int Compare(string x, string y)
+        {
+            if (x.Substring(0, 1) == "V" && y.Substring(0, 1) == "V")
+            {
+                int gx = int.Parse(x.Substring(1));
+                int gy = int.Parse(y.Substring(1));
+                return Ascending ? (gx - gy) : (gy - gx);
+            }
+            return StringComparer.InvariantCulture.Compare(x, y);
+        }
     }
 }
