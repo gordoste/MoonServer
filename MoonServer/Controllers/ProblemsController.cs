@@ -12,24 +12,12 @@ namespace MoonServer.Controllers
     public class ProblemsController : BaseController
     {
         // GET: Problems
+        //public async Task<ActionResult> Index()
         public ActionResult Index()
         {
+            //    var problems = db.Problems.Include(p => p.Grade).Include(p => p.HoldSetup);
+            //    return View(await problems.ToListAsync());
             return View(new List<Problem>());
-        }
-
-        // GET: Problems
-        public async Task<ActionResult> IndexParam(string name, string grade, int? rating, int? repeats, bool? isBenchmark)
-        {
-            // Validate grade parameter
-            if (grade != null)
-            {
-                List<string> gradeNames = (List<string>)HttpRuntime.Cache.Get(Constants.GradeKey);
-                if (!gradeNames.Contains(grade)) { grade = null; }
-            }
-
-
-            var problems = db.Problems.Include(p => p.Grade).Include(p => p.HoldSetup);
-            return View(await problems.ToListAsync());
         }
 
         // GET: Problems/Details/5

@@ -1,14 +1,13 @@
 {
   "Strings": {
     "AllFilterName": "X",
-    "CacheDir": "C:\\Users\\gordoste\\Downloads\\moonboard\\json\\cache",
-    "MaxProblemsReturned": 500,
-    "TooManyProblemsMsg":  "Too many problems"
+    "MaxProblemsReturned": 1500,
+    "TooManyProblemsCode": "TOO_MANY_PROBLEMS"
   },
   "Filters": [
     {
       "Name": "repeats",
-      "CSharpAttr":  "Repeats",
+      "CSharpAttr": "Repeats",
       "JsonAttr": "Repeats",
       "Type": ">=",
       "Categories": [ 1, 5, 20, 50, 100 ]
@@ -30,7 +29,8 @@
       "Name": "grade",
       "CSharpAttr": "Grade",
       "JsonAttr": "GradeName",
-      "Type": "preconf"
+      "Type": "eq",
+      "Categories": [ "V4", "V5", "V6", "V7", "V8", "V9" ]
     }
   ]
 }

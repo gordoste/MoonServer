@@ -2,59 +2,62 @@
 
 @{
     ViewBag.Title = "MoonBoard Problems";
-    List<string> gradeList = (List<string>)(HttpRuntime.Cache.Get(Constants.GradeKey));
-    gradeList.Sort(new MoonServer.Models.GradeComparer());
+    List<string> gradeList = Constants.GetFilter("grade").Categories;
+    gradeList.Sort(new MoonServer.Models.AmericanGradeComparer());
 }
+<div class="row w-100">
+    <div id="datagetter" class="button-blue col-2">Get Data</div>
+    <div id="resetbtn" class="button-blue col-2">Reset</div>
+    <div class="col-4">&nbsp;</div>
+    <div id="probcount" class="h1 col-2"></div>
+    <div class="col-4">&nbsp;</div>
+</div>
 
 <div class="filters button-group">
-    <button class="button is-checked" data-filter="grade:*">show all</button>
     @foreach (var g in gradeList)
     {
-        <button class="button" data-filter="grade:@g">@g</button>
+        <button class="button-blue" data-filter="grade:@g">@g</button>
     }
+    <button class="button-blue is-checked allfilter" data-filter="grade:*">show all</button>
 </div>
 
 <div class="filters button-group">
-    <button class="button is-checked" data-filter="repeats:*">show all</button>
-    @foreach (var i in Constants.getFilter("repeats").Categories)
+    @foreach (var i in Constants.GetFilter("repeats").Categories.ConvertAll(s => int.Parse(s)))
     {
         if (i > 0)
         {
-            <button class="button" data-filter="repeats:@i">@i+ repeat@(i > 1 ? "s" : "")</button>
+            <button class="button-blue" data-filter="repeats:@i">@i+ repeat@(i > 1 ? "s" : "")</button>
         }
     }
+    <button class="button-blue is-checked allfilter" data-filter="repeats:*">show all</button>
 </div>
 
 <div class="filters button-group">
-    <button class="button is-checked" data-filter="rating:*">show all</button>
-    @foreach (var i in Constants.getFilter("rating").Categories)
+    @foreach (var i in Constants.GetFilter("rating").Categories.ConvertAll(s => int.Parse(s)))
     {
         if (i > 0)
         {
-            <button class="button" data-filter="rating:@i">@i star@(i > 1 ? "s" : "")</button>
+            <button class="button-blue" data-filter="rating:@i">@i star@(i > 1 ? "s" : "")</button>
         }
     }
+    <button class="button-blue is-checked allfilter" data-filter="rating:*">show all</button>
 </div>
 
 <div class="filters button-group">
-    <button class="button is-checked" data-filter="benchmark:*">show all</button>
-    <button class="button" data-filter="benchmark:B">benchmark only</button>
+    <button class="button-blue" data-filter="benchmark:B">benchmark only</button>
+    <button class="button-blue is-checked allfilter" data-filter="benchmark:*">show all</button>
 </div>
 
 <div class="filters form-text"><input type="text" maxlength="20" id="namefilter" /></div>
 
 <div id="sorts" class="button-group">
-    <button class="button is-checked" data-sort-by="original-order">original order</button>
-    <button class="button" data-sort-by="name">name</button>
-    <button class="button" data-sort-by="grade">grade</button>
-    <button class="button" data-sort-by="rating">rating</button>
-    <button class="button" data-sort-by="repeats">repeats</button>
+    <button class="button-blue is-checked" data-sort-by="name">name</button>
+    <button class="button-blue" data-sort-by="grade">grade</button>
+    <button class="button-blue" data-sort-by="rating">rating</button>
+    <button class="button-blue" data-sort-by="repeats">repeats</button>
 </div>
 
-<div class="grid">
-</div>
-
-<div id="datagetter" class="button">Get Data</div>
+<div class="grid"><div id="gridstart" hidden></div></div>
 
 @section scripts {
     <script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.js"></script>
@@ -62,26 +65,28 @@
     <script language="javascript">
         var filterFns = {
             grade: function (elem) {
-                return $(elem).find('.grade').text() == filters["grade"];
+                return $(elem).find('.grade').text() == postFilters["grade"];
             },
             name: function (elem) {
                 return $(elem).find('.name').text().toLowerCase()
-                    .startsWith(filters["name"].toLowerCase());
+                    .startsWith(postFilters["name"].toLowerCase());
             },
             repeats: function (elem) {
-                return parseInt($(elem).find('.repeats').text()) > parseInt(filters["repeats"]);
+                return parseInt($(elem).find('.repeats').text()) > parseInt(postFilters["repeats"]);
             },
             rating: function (elem) {
-                return parseInt($(elem).find('.rating').text()) > parseInt(filters["rating"]);
+                return parseInt($(elem).find('.rating').text()) > parseInt(postFilters["rating"]);
             },
             benchmark: function (elem) {
                 return $(elem).find('.benchmark').text() == "B";
             }
         };
 
-        var filters = {}; // No filters at the start
+        $('#resetbtn').hide();
+
+        var postFilters = {}; // No filters at the start
         var filterFn = function () {
-            for (var key in filters) {
+            for (var key in postFilters) {
                 var fn = filterFns[key];
                 if (!fn(this)) { return false; }
             }
@@ -89,6 +94,7 @@
         };
 
         // init Isotope
+        var $selected;
         var $grid = $('.grid');
         function updateGrid() {
             $grid = $('.grid').isotope({
@@ -107,20 +113,10 @@
                     grade: true,
                     rating: false,
                     repeats: false
-                }
+                },
+                sortBy: 'name'
             });
         };
-
-        // bind filter button click
-        $('.filters').on('click', 'button', function () {
-            var filterParts = $(this).attr('data-filter').split(':');
-            if (filterParts[1] == "*") {
-                delete filters[filterParts[0]];
-            } else {
-                filters[filterParts[0]] = filterParts[1];
-            }
-            $grid.isotope({ filter: filterFn });
-        });
 
         // Set up a trigger on key press which will apply filter after 1 second
         // Timer restarts if another key press occurs
@@ -131,7 +127,7 @@
                 clearTimeout(nameFilterTimeout);
             }
             nameFilterTimeout = setTimeout(function () {
-                filters['name'] = $(that).val();
+                postFilters['name'] = $(that).val();
                 $grid.isotope({ filter: filterFn });
             }, 1000);
         });
@@ -152,16 +148,24 @@
         });
 
         $('#datagetter').on('click', function () {
-            var filter = { };
+            var preFilters = {};
+            $('.filters button.is-checked').each(function (i, e) {
+                var filterParts = $(this).attr('data-filter').split(':');
+                if (filterParts[1] == "*") {
+                    preFilters[filterParts[0]] = "@Constants.GetString("AllFilterName")";
+                } else {
+                    preFilters[filterParts[0]] = filterParts[1];
+                }
+            });
             $.ajax({
                 type: 'POST',
-                data: JSON.stringify(filter),
+                data: JSON.stringify(preFilters),
                 url: "/api/Problems",
                 contentType: 'application/json'
             })
                 .done(function (data) {
                     if (data['Status'] == 200) {
-                        $grid.remove('.element-item');
+                        $('.element-item').remove();
                         for (var i = 0; i < data['Problems'].length; i++) {
                             var prob = data['Problems'][i];
                             var probDiv = '<div class="element-item ' + prob.GradeName + '">' +
@@ -170,20 +174,75 @@
                                 '<p class="repeats">' + prob.Repeats + '</p>' +
                                 '<p class="rating">' + prob.Rating + '</p>' +
                                 '<div class="benchmark">' + (prob.IsBenchmark ? "B" : "") + '</div>' +
+                                '<p class="probId" hidden>' + prob.Id + '</p>' +
                                 '</div>';
                             $grid.append(probDiv);
                         }
+                        $('#probcount').text(data['Problems'].length);
                         updateGrid();
+                        $('.filters button.is-checked').each(function (i, e) {
+                            var elem = $(e);
+                            if (elem.hasClass('allfilter')) {
+                                elem.removeClass('button-blue').addClass('button-red');
+                                elem.siblings().removeClass('button-blue').addClass('button-red');
+                            }
+                            else {
+                                elem.siblings().attr('disabled', true);
+                            }
+                        });
+                        // bind post-filter button click
+                        $('.filters .button-red').on('click', function () {
+                            var filterParts = $(this).attr('data-filter').split(':');
+                            if (filterParts[1] == "*") {
+                                delete postFilters[filterParts[0]];
+                            } else {
+                                postFilters[filterParts[0]] = filterParts[1];
+                            }
+                            $grid.isotope({ filter: filterFn });
+                            $('#probcount').text($grid.isotope('getFilteredItemElements').length);
+                        });
+                        $('.element-item').on('click', function () {
+                            $selected.removeClass('selected');
+                            var $src = $(this);
+                            $.ajax({
+                                type: 'GET',
+                                url: "/api/Problems/Choose/" + $src.find('.probId').text()
+                            })
+                                .done(function (data) {
+                                    if (data['Status'] == 200) {
+                                        $src.addClass('selected');
+                                        $selected = $src;
+                                    }
+                                    else {
+                                        if (!data['Message']) { data['Message'] = 'Unknown'; }
+                                        alert("HTTP code " + data['Status'] + ": " + data['Message']);
+                                    }
+                                });
+                        });
+                        $('#datagetter').hide();
+                        $('#resetbtn').show();
                     }
                     else {
                         if (!data['Message']) { data['Message'] = 'Unknown'; }
-                        if (data['Status'] == 403 && data['Message'] == "@Constants.getString("TooManyProblemsMsg")") {
-                            alert("Too many problems, apply more filters");
+                        if (data['Status'] == 403 && data['SubStatus'] == "@Constants.GetString("TooManyProblemsCode")") {
+                            alert(data['Message']);
                         }
                         else {
                             alert("HTTP code " + data['Status'] + ": " + data['Message']);
                         }
                     }
+            });
+            $('#resetbtn').on('click', function () {
+                $('.element-item').remove();
+                $('.filters button')
+                    .removeAttr('disabled')
+                    .removeClass(['is-checked', 'button-red'])
+                    .addClass('button-blue');
+                $('.filters').off('click', 'button-blue');
+                $('button.allfilter').addClass('is-checked');
+                $('#probcount').text('');
+                $('#datagetter').show();
+                $(this).hide();
             });
         });
 

@@ -185,7 +185,6 @@
     </Compile>
     <Compile Include="Models\EndProblemPosition.cs" />
     <Compile Include="Models\Grade.cs" />
-    <Compile Include="Models\GradeComparer.cs" />
     <Compile Include="Models\Hold.cs" />
     <Compile Include="Models\HoldPlacement.cs" />
     <Compile Include="Models\HoldSetup.cs" />
@@ -204,6 +203,7 @@
     <Compile Include="Models\Serialization.cs" />
     <Compile Include="Models\StartProblemPosition.cs" />
     <Compile Include="Models\Utils.cs" />
+    <Compile Include="MoonboardClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -260,6 +260,7 @@
     <Content Include="App_Data\moonserver.sqlite" />
     <Content Include="package.json" />
     <Content Include="constants.json" />
+    <Content Include="App_Data\moonserver_small.sqlite" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
