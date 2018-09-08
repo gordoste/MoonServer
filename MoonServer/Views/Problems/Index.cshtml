@@ -202,7 +202,7 @@
                             $('#probcount').text($grid.isotope('getFilteredItemElements').length);
                         });
                         $('.element-item').on('click', function () {
-                            $selected.removeClass('selected');
+                            if ($selected) $selected.removeClass('selected');
                             var $src = $(this);
                             $.ajax({
                                 type: 'GET',
