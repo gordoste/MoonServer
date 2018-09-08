@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace MoonServer
 {
@@ -18,7 +17,6 @@ namespace MoonServer
         private readonly MoonServerDB Database;
         private readonly TextWriter Log;
         private int CmdId = 1;
-        private readonly Regex holdRegex = new Regex(@"\b([A-K])(\d+)", RegexOptions.Compiled);
         private readonly Decoder dec = Encoding.ASCII.GetDecoder();
         private List<string> rcvdList = new List<string>();
         private string rcvdBuf = "";
@@ -52,28 +50,11 @@ namespace MoonServer
             ReceiveDebugLogTimeout();
             if (!ClearBoard()) { return false; }
             Problem prb = Database.Problems.First(p => p.Id == id);
-            if (!LightHolds(prb.ProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name))))
-            {
-                return false;
-            }
-            if (!LightStartHolds(prb.StartProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name))))
-            {
-                return false;
-            }
-            if (!LightEndHolds(prb.EndProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name))))
-            {
-                return false;
-            }
+            PositionStrings ps = new PositionStrings(prb);
+            if (!LightHolds(ps.Normal)) { return false; }
+            if (!LightStartHolds(ps.Start)) { return false; }
+            if (!LightEndHolds(ps.End)) { return false; }
             return true;
-        }
-
-        private string ConvertHold(string hold)
-        {
-            Match m = holdRegex.Match(hold);
-            string colCode = m.Groups["1"].Value;
-            int rowNum = int.Parse(m.Groups["2"].Value);
-            char rowCode = (char)('A' + (rowNum - 1));
-            return string.Format("{0}{1}", colCode, rowCode);
         }
 
         private bool LightHolds(List<string> holds)
@@ -96,7 +77,7 @@ namespace MoonServer
             return SendCommand("CLR");
         }
 
-        private bool SendCommand(string command, string data=null)
+        private bool SendCommand(string command, string data = null)
         {
             string cmd = string.Format("{0} {1}", command, CmdId);
             if (data != null)
@@ -123,7 +104,8 @@ namespace MoonServer
             {
                 ReceiveLines();
                 if (rcvdList.Count == 0) { return false; }
-                while (rcvdList.Count > 0) {
+                while (rcvdList.Count > 0)
+                {
                     rcvd = rcvdList[0];
                     rcvdList.RemoveAt(0);
                     if (rcvd.Equals(expected)) { return true; }
@@ -164,7 +146,8 @@ namespace MoonServer
                 dec.GetChars(rcvBuffer, 0, bytesRcvd, chars, 0);
                 rcvdBuf += new string(chars);
                 int i;
-                while ((i = rcvdBuf.IndexOf("\r\n")) != -1) {
+                while ((i = rcvdBuf.IndexOf("\r\n")) != -1)
+                {
                     rcvdList.Add(rcvdBuf.Substring(0, i));
                     rcvdBuf = rcvdBuf.Substring(i + 2);
                 }
@@ -193,11 +176,13 @@ namespace MoonServer
 
         private bool ProcessDebugLogTimeout(string s)
         {
-            if (s.StartsWith("DBG")) {
+            if (s.StartsWith("DBG"))
+            {
                 if (Debug) Log.WriteLine(s);
                 return true;
             }
-            if (s.StartsWith("LOG")) {
+            if (s.StartsWith("LOG"))
+            {
                 Log.WriteLine(s);
                 return true;
             }

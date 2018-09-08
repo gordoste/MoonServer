@@ -171,6 +171,7 @@
     <Compile Include="Models\StartProblemPosition.cs" />
     <Compile Include="Models\Utils.cs" />
     <Compile Include="MoonboardClient.cs" />
+    <Compile Include="PositionStrings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
