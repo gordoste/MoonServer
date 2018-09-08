@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 
 namespace MoonServer
@@ -27,7 +26,7 @@ namespace MoonServer
 
         public static readonly Configuration Config;
         public static readonly Dictionary<string, string> FileSettings;
- 
+
         static Constants()
         {
             Config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(ConstantsFile));
