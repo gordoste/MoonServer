@@ -7,5 +7,11 @@ namespace MoonServer.Controllers
     {
         protected MoonServerDB db = new MoonServerDB();
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+        }
     }
-}
