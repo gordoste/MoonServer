@@ -15,11 +15,11 @@ namespace MoonServer
 
         public PositionStrings(Problem p)
         {
-            List<string> normalPos = p.ProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name));
-            List<string> startPos = p.StartProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name));
-            List<string> endPos = p.EndProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name));
+            Normal = p.ProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name));
+            Start = p.StartProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name));
+            End = p.EndProblemPositions.ToList().ConvertAll(pos => ConvertHold(pos.Position.Name));
 
-            normalPos = (List<string>)normalPos.Except(startPos.Concat(endPos));
+            Normal = Normal.Except(Start.Concat(End)).ToList();
         }
 
         private string ConvertHold(string hold)
