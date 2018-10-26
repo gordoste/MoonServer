@@ -52,24 +52,14 @@ namespace MoonServer
             Problem prb = Database.Problems.First(p => p.Id == id);
             PositionStrings ps = new PositionStrings(prb);
             if (!LightHolds(ps.Normal)) { return false; }
-            if (!LightStartHolds(ps.Start)) { return false; }
-            if (!LightEndHolds(ps.End)) { return false; }
+            if (!LightHolds(ps.Start)) { return false; }
+            if (!LightHolds(ps.End)) { return false; }
             return true;
         }
 
         private bool LightHolds(List<string> holds)
         {
-            return SendCommand("HLD", string.Join(" ", holds));
-        }
-
-        private bool LightStartHolds(List<string> holds)
-        {
-            return SendCommand("STA", string.Join(" ", holds));
-        }
-
-        private bool LightEndHolds(List<string> holds)
-        {
-            return SendCommand("END", string.Join(" ", holds));
+            return SendCommand("SET", string.Join(" ", holds));
         }
 
         private bool ClearBoard()
@@ -109,7 +99,7 @@ namespace MoonServer
                     rcvd = rcvdList[0];
                     rcvdList.RemoveAt(0);
                     if (rcvd.Equals(expected)) { return true; }
-                    if (!ProcessDebugLogTimeout(rcvd))
+                    if (!ProcessDebugLog(rcvd))
                     {
                         throw new IOException(string.Format("Expected '{0}', got '{1}'", expected, rcvd));
                     }
@@ -166,7 +156,7 @@ namespace MoonServer
                     rcvd = rcvdList[0];
                     rcvdList.RemoveAt(0);
                     if (Debug) { Log.WriteLine("Received " + rcvd); }
-                    if (!ProcessDebugLogTimeout(rcvd))
+                    if (!ProcessDebugLog(rcvd))
                     {
                         throw new IOException(string.Format("Unexpected message '{0}'", rcvd));
                     }
@@ -174,7 +164,7 @@ namespace MoonServer
             }
         }
 
-        private bool ProcessDebugLogTimeout(string s)
+        private bool ProcessDebugLog(string s)
         {
             if (s.StartsWith("DBG"))
             {
@@ -184,12 +174,6 @@ namespace MoonServer
             if (s.StartsWith("LOG"))
             {
                 Log.WriteLine(s);
-                return true;
-            }
-            if (s.StartsWith("TIM"))
-            {
-                Log.WriteLine("Connection timed out");
-                ConfirmConnected();
                 return true;
             }
             return false;
