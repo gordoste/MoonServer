@@ -72,16 +72,17 @@
                     .startsWith(postFilters["name"].toLowerCase());
             },
             repeats: function (elem) {
-                return parseInt($(elem).find('.repeats').text()) > parseInt(postFilters["repeats"]);
+                return parseInt($(elem).find('.repeats').text()) >= parseInt(postFilters["repeats"]);
             },
             rating: function (elem) {
-                return parseInt($(elem).find('.rating').text()) > parseInt(postFilters["rating"]);
+                return parseInt($(elem).find('.rating').text()) >= parseInt(postFilters["rating"]);
             },
             benchmark: function (elem) {
                 return $(elem).find('.benchmark').text() == "B";
             }
         };
 
+        $('#probcount').hide();
         $('#resetbtn').hide();
 
         var postFilters = {}; // No filters at the start
@@ -133,7 +134,7 @@
         });
 
         // bind sort button click
-        $('#sorts').on( 'click', 'button', function() {
+        $('#sorts').on( 'click tap', 'button', function() {
           var sortByValue = $(this).attr('data-sort-by');
           $grid.isotope({ sortBy: sortByValue });
         });
@@ -141,13 +142,13 @@
         // change is-checked class on buttons
         $('.button-group').each(function (i, buttonGroup) {
             var $buttonGroup = $(buttonGroup);
-            $buttonGroup.on('click', 'button', function () {
+            $buttonGroup.on('click tap', 'button', function () {
                 $buttonGroup.find('.is-checked').removeClass('is-checked');
                 $(this).addClass('is-checked');
             });
         });
 
-        $('#datagetter').on('click', function () {
+        $('#datagetter').on('click tap', function () {
             var preFilters = {};
             $('.filters button.is-checked').each(function (i, e) {
                 var filterParts = $(this).attr('data-filter').split(':');
@@ -178,7 +179,7 @@
                                 '</div>';
                             $grid.append(probDiv);
                         }
-                        $('#probcount').text(data['Problems'].length);
+                        $('#probcount').text(data['Problems'].length).show();
                         updateGrid();
                         $('.filters button.is-checked').each(function (i, e) {
                             var elem = $(e);
@@ -191,7 +192,7 @@
                             }
                         });
                         // bind post-filter button click
-                        $('.filters .button-red').on('click', function () {
+                        $('.filters .button-red').on('click tap', function () {
                             var filterParts = $(this).attr('data-filter').split(':');
                             if (filterParts[1] == "*") {
                                 delete postFilters[filterParts[0]];
@@ -201,7 +202,7 @@
                             $grid.isotope({ filter: filterFn });
                             $('#probcount').text($grid.isotope('getFilteredItemElements').length);
                         });
-                        $('.element-item').on('click', function () {
+                        $('.element-item').on('click tap', function () {
                             if ($selected) $selected.removeClass('selected');
                             var $src = $(this);
                             $.ajax({
@@ -232,15 +233,15 @@
                         }
                     }
             });
-            $('#resetbtn').on('click', function () {
+            $('#resetbtn').on('click tap', function () {
                 $('.element-item').remove();
                 $('.filters button')
                     .removeAttr('disabled')
                     .removeClass(['is-checked', 'button-red'])
                     .addClass('button-blue');
-                $('.filters').off('click', 'button-blue');
+                $('.filters').off('click tap', 'button-blue');
                 $('button.allfilter').addClass('is-checked');
-                $('#probcount').text('');
+                $('#probcount').hide();
                 $('#datagetter').show();
                 $(this).hide();
             });
