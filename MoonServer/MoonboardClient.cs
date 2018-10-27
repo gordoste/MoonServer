@@ -1,4 +1,5 @@
 ﻿using MoonServer.Models;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -44,30 +45,42 @@ namespace MoonServer
             Debug = false;
         }
 
-        public bool ShowProblem(int id)
+        public void ShowProblem(int id)
         {
-            ConfirmConnected();
-            ReceiveDebugLogTimeout();
-            if (!ClearBoard()) { return false; }
             Problem prb = Database.Problems.First(p => p.Id == id);
             PositionStrings ps = new PositionStrings(prb);
-            if (!LightHolds(ps.Normal)) { return false; }
-            if (!LightHolds(ps.Start)) { return false; }
-            if (!LightHolds(ps.End)) { return false; }
-            return true;
+            try
+            {
+                OpenConnection();
+            }
+            catch (SocketException se)
+            {
+                throw new MoonboardClientException(string.Format("{0}:{1}", se.SocketErrorCode, se.Message));
+            }
+            try
+            {
+                ClearBoard();
+                LightHolds(ps.Normal.Concat(ps.Start.Concat(ps.End)));
+            }
+            catch (MoonboardClientException mbe)
+            {
+                CloseConnection();
+                throw mbe;
+            }
+            CloseConnection();
         }
 
-        private bool LightHolds(List<string> holds)
+        private void LightHolds(IEnumerable<string> holds)
         {
-            return SendCommand("SET", string.Join(" ", holds));
+            SendCommand("SET", string.Join(" ", holds));
         }
 
-        private bool ClearBoard()
+        private void ClearBoard()
         {
-            return SendCommand("CLR");
+            SendCommand("CLR");
         }
 
-        private bool SendCommand(string command, string data = null)
+        private void SendCommand(string command, string data = null)
         {
             string cmd = string.Format("{0} {1}", command, CmdId);
             if (data != null)
@@ -81,33 +94,29 @@ namespace MoonServer
             {
                 totalBytesSent += clientSock.Send(sendBuffer, totalBytesSent, sendBuffer.Length - totalBytesSent, SocketFlags.None);
             }
-            bool result = WaitForAck(CmdId);
+            WaitForAck(CmdId);
             CmdId++;
-            return result;
         }
 
-        private bool WaitForAck(int cmdId)
+        private void WaitForAck(int cmdId)
         {
             string expected = string.Format("ACK {0}", cmdId);
             string rcvd;
             while (true)
             {
                 ReceiveLines();
-                if (rcvdList.Count == 0) { return false; }
+                if (rcvdList.Count == 0) { throw new MoonboardClientException("WaitForAck(): No response received"); }
                 while (rcvdList.Count > 0)
                 {
                     rcvd = rcvdList[0];
                     rcvdList.RemoveAt(0);
-                    if (rcvd.Equals(expected)) { return true; }
-                    if (!ProcessDebugLog(rcvd))
-                    {
-                        throw new IOException(string.Format("Expected '{0}', got '{1}'", expected, rcvd));
-                    }
+                    if (rcvd.Equals(expected)) { return; }
+                    throw new MoonboardClientException(string.Format("Expected '{0}', got '{1}'", expected, rcvd));
                 }
             }
         }
 
-        private bool ReceiveLines()
+        private void ReceiveLines()
         {
             char[] chars;
             int bytesRcvd = 0;
@@ -118,19 +127,24 @@ namespace MoonServer
                 {
                     if ((bytesRcvd = clientSock.Receive(rcvBuffer, 0, rcvBuffer.Length, SocketFlags.None)) == 0)
                     {
-                        Log.WriteLine("Connection closed prematurely");
-                        Reset();
-                        return false;
+                        throw new MoonboardClientException("Connection closed prematurely");
                     }
                 }
                 catch (SocketException se)
                 {
                     if (se.SocketErrorCode == SocketError.TimedOut)
                     {
-                        Log.WriteLine(string.Format("Timed out without receiving complete response. Response: '{0}'", rcvdBuf));
-                        clientSock.Close();
-                        return false;
+                        throw new MoonboardClientException("ReceiveLines(): Timed out");
                     }
+                    if (se.SocketErrorCode == SocketError.NotConnected)
+                    {
+                        throw new MoonboardClientException("ReceiveLines(): Socket not connected");
+                    }
+                    throw se;
+                }
+                catch (ObjectDisposedException)
+                {
+                    throw new MoonboardClientException("ReceiveLines(): Socket disposed while receiving");
                 }
                 chars = new char[bytesRcvd];
                 dec.GetChars(rcvBuffer, 0, bytesRcvd, chars, 0);
@@ -138,61 +152,29 @@ namespace MoonServer
                 int i;
                 while ((i = rcvdBuf.IndexOf("\r\n")) != -1)
                 {
-                    rcvdList.Add(rcvdBuf.Substring(0, i));
+                    string rcvdStr = rcvdBuf.Substring(0, i);
+                    rcvdList.Add(rcvdStr);
+                    Log.WriteLine(string.Format("Received: {0}", rcvdStr));
                     rcvdBuf = rcvdBuf.Substring(i + 2);
                 }
             }
-            return true;
         }
 
-        private void ReceiveDebugLogTimeout()
+        private void OpenConnection()
         {
-            while (clientSock.Available > 0)
-            {
-                ReceiveLines();
-                string rcvd;
-                while (rcvdList.Count > 0)
-                {
-                    rcvd = rcvdList[0];
-                    rcvdList.RemoveAt(0);
-                    if (Debug) { Log.WriteLine("Received " + rcvd); }
-                    if (!ProcessDebugLog(rcvd))
-                    {
-                        throw new IOException(string.Format("Unexpected message '{0}'", rcvd));
-                    }
-                }
-            }
-        }
-
-        private bool ProcessDebugLog(string s)
-        {
-            if (s.StartsWith("DBG"))
-            {
-                if (Debug) Log.WriteLine(s);
-                return true;
-            }
-            if (s.StartsWith("LOG"))
-            {
-                Log.WriteLine(s);
-                return true;
-            }
-            return false;
-        }
-
-        private void ConfirmConnected()
-        {
-            if (clientSock.Connected) { return; }
-            Reset();
+            clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             clientSock.Connect(Address, Port);
             clientSock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 10000);
-        }
-
-        public void Reset()
-        {
             rcvdList = new List<string>();
             rcvdBuf = "";
+            Log.WriteLine("Connection opened");
+        }
+
+        public void CloseConnection()
+        {
             if (clientSock != null && clientSock.Connected) { clientSock.Close(); }
-            clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            clientSock = null;
+            Log.WriteLine("Connection closed");
         }
     }
 
@@ -207,5 +189,11 @@ namespace MoonServer
         {
             get { return System.Text.Encoding.UTF8; }
         }
+    }
+
+    public class MoonboardClientException :Exception
+    {
+        public MoonboardClientException() : base() { }
+        public MoonboardClientException(string message) : base(message) { }
     }
 }

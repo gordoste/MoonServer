@@ -85,22 +85,15 @@ namespace MoonServer.Controllers
         {
             try
             {
-                if (moonboardClient.ShowProblem(id))
-                {
-                    return Json(new ChooseResponse { Status = HttpStatusCode.OK, Id = id });
-                }
-                else
-                {
-                    return Json(new ChooseResponse { Status = HttpStatusCode.InternalServerError });
-                }
+                moonboardClient.ShowProblem(id);
+                return Json(new ChooseResponse { Status = HttpStatusCode.OK, Id = id });
             }
-            catch (IOException ioe)
+            catch (MoonboardClientException mbe)
             {
-                moonboardClient.Reset();
                 return Json(new ChooseResponse
                 {
                     Status = HttpStatusCode.InternalServerError,
-                    Message = ioe.Message
+                    Message = mbe.Message
                 });
             }
         }
