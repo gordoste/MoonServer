@@ -38,11 +38,8 @@ namespace MoonServer.Controllers
     public class ProblemsAPIController : ApiController
     {
         private static readonly MoonServerDB db = new MoonServerDB();
-        private readonly TcpClient TcpClient = new TcpClient();
         private static readonly MoonboardClient moonboardClient
-            = new MoonboardClient(IPAddress.Parse(Constants.GetFileConfig("MoonboardIP")),
-                int.Parse(Constants.GetString("MoonboardPort")),
-                db);
+            = new MoonboardClient(db);
 
         // POST api/Problems
         [HttpPost]

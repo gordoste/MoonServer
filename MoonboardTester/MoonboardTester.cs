@@ -28,7 +28,7 @@ namespace MoonboardTester
             AppDomain.CurrentDomain.SetData("DataDirectory", absolute);
             logStream = new TextBoxStreamWriter(LogTextBox);
             db = new MoonServerDB();
-            client = new MoonboardClient("192.168.20.69", 23, db, logStream);
+            client = new MoonboardClient(db, logStream);
         }
 
         private void ChooseBtn_Click(object sender, EventArgs e)

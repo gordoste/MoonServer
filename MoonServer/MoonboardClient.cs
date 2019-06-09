@@ -12,37 +12,171 @@ namespace MoonServer
 {
     public class MoonboardClient
     {
-        private readonly IPAddress Address;
-        private readonly int Port;
-        private Socket clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        public class PanelClient
+        {
+            private readonly IPAddress Address;
+            private readonly int Port;
+            private Socket clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            private readonly TextWriter Log;
+            private int CmdId = 1;
+            private readonly Decoder dec = Encoding.ASCII.GetDecoder();
+            private List<string> rcvdList = new List<string>();
+            private string rcvdBuf = "";
+
+            public bool Debug { get; set; }
+
+            public PanelClient(IPAddress address, int port) :
+                this(address, port, new DebugWriter())
+            { }
+
+            public PanelClient(string ipAddress, int port, Stream log) :
+                this(IPAddress.Parse(ipAddress), port, new StreamWriter(log))
+            { }
+
+            public PanelClient(string ipAddress, int port, TextWriter log) :
+                this(IPAddress.Parse(ipAddress), port, log)
+            { }
+
+            public PanelClient(IPAddress address, int port, TextWriter log)
+            {
+                Address = address;
+                Port = port;
+                Log = log;
+                Debug = false;
+            }
+
+            public void LightHolds(IEnumerable<string> holds)
+            {
+                SendCommand("SET", string.Join(" ", holds));
+            }
+
+            public void ClearBoard()
+            {
+                SendCommand("CLR");
+            }
+
+            private void SendCommand(string command, string data = null)
+            {
+                string cmd = string.Format("{0} {1}", command, CmdId);
+                if (data != null)
+                {
+                    cmd += (" " + data);
+                }
+                Log.WriteLine(string.Format("Sending command '{0}'", cmd));
+                int totalBytesSent = 0;
+                byte[] sendBuffer = Encoding.ASCII.GetBytes(cmd + "\r\n");
+                while (totalBytesSent < sendBuffer.Length)
+                {
+                    totalBytesSent += clientSock.Send(sendBuffer, totalBytesSent, sendBuffer.Length - totalBytesSent, SocketFlags.None);
+                }
+                WaitForAck(CmdId);
+                CmdId++;
+            }
+
+            private void WaitForAck(int cmdId)
+            {
+                string expected = string.Format("ACK {0}", cmdId);
+                string rcvd;
+                while (true)
+                {
+                    ReceiveLines();
+                    if (rcvdList.Count == 0) { throw new MoonboardClientException("WaitForAck(): No response received"); }
+                    while (rcvdList.Count > 0)
+                    {
+                        rcvd = rcvdList[0];
+                        rcvdList.RemoveAt(0);
+                        if (rcvd.Equals(expected)) { return; }
+                        throw new MoonboardClientException(string.Format("Expected '{0}', got '{1}'", expected, rcvd));
+                    }
+                }
+            }
+
+            private void ReceiveLines()
+            {
+                char[] chars;
+                int bytesRcvd = 0;
+                byte[] rcvBuffer = new byte[256];
+                while (rcvdList.Count == 0)
+                {
+                    try
+                    {
+                        if ((bytesRcvd = clientSock.Receive(rcvBuffer, 0, rcvBuffer.Length, SocketFlags.None)) == 0)
+                        {
+                            throw new MoonboardClientException("Connection closed prematurely");
+                        }
+                    }
+                    catch (SocketException se)
+                    {
+                        if (se.SocketErrorCode == SocketError.TimedOut)
+                        {
+                            throw new MoonboardClientException("ReceiveLines(): Timed out");
+                        }
+                        if (se.SocketErrorCode == SocketError.NotConnected)
+                        {
+                            throw new MoonboardClientException("ReceiveLines(): Socket not connected");
+                        }
+                        throw se;
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        throw new MoonboardClientException("ReceiveLines(): Socket disposed while receiving");
+                    }
+                    chars = new char[bytesRcvd];
+                    dec.GetChars(rcvBuffer, 0, bytesRcvd, chars, 0);
+                    rcvdBuf += new string(chars);
+                    int i;
+                    while ((i = rcvdBuf.IndexOf("\r\n")) != -1)
+                    {
+                        string rcvdStr = rcvdBuf.Substring(0, i);
+                        rcvdList.Add(rcvdStr);
+                        Log.WriteLine(string.Format("Received: {0}", rcvdStr));
+                        rcvdBuf = rcvdBuf.Substring(i + 2);
+                    }
+                }
+            }
+
+            public void OpenConnection()
+            {
+                clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                clientSock.Connect(Address, Port);
+                clientSock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 10000);
+                rcvdList = new List<string>();
+                rcvdBuf = "";
+                Log.WriteLine("Connection opened");
+            }
+
+            public void CloseConnection()
+            {
+                if (clientSock != null && clientSock.Connected) { clientSock.Close(); }
+                clientSock = null;
+                Log.WriteLine("Connection closed");
+            }
+        }
+
         private readonly MoonServerDB Database;
         private readonly TextWriter Log;
-        private int CmdId = 1;
-        private readonly Decoder dec = Encoding.ASCII.GetDecoder();
-        private List<string> rcvdList = new List<string>();
-        private string rcvdBuf = "";
+        private PanelClient topPanel;
+        private PanelClient midPanel;
+        private PanelClient btmPanel;
 
         public bool Debug { get; set; }
 
-        public MoonboardClient(IPAddress address, int port, MoonServerDB database) :
-            this(address, port, database, new DebugWriter())
+        public MoonboardClient(MoonServerDB database) :
+            this(database, new DebugWriter())
         { }
 
-        public MoonboardClient(string ipAddress, int port, MoonServerDB database, Stream log) :
-            this(IPAddress.Parse(ipAddress), port, database, new StreamWriter(log))
+        public MoonboardClient(MoonServerDB database, Stream log) :
+            this(database, new StreamWriter(log))
         { }
 
-        public MoonboardClient(string ipAddress, int port, MoonServerDB database, TextWriter log) :
-            this(IPAddress.Parse(ipAddress), port, database, log)
-        { }
-
-        public MoonboardClient(IPAddress address, int port, MoonServerDB database, TextWriter log)
+        public MoonboardClient(MoonServerDB database, TextWriter log)
         {
             Database = database;
-            Address = address;
-            Port = port;
             Log = log;
             Debug = false;
+            btmPanel = new PanelClient("192.168.20.101", 23, log);
+            midPanel = new PanelClient("192.168.20.102", 23, log);
+            topPanel = new PanelClient("192.168.20.103", 23, log);
         }
 
         public void ShowProblem(int id)
@@ -51,7 +185,9 @@ namespace MoonServer
             PositionStrings ps = new PositionStrings(prb);
             try
             {
-                OpenConnection();
+                btmPanel.OpenConnection();
+                midPanel.OpenConnection();
+                topPanel.OpenConnection();
             }
             catch (SocketException se)
             {
@@ -59,123 +195,25 @@ namespace MoonServer
             }
             try
             {
-                ClearBoard();
-                LightHolds(ps.Normal.Concat(ps.Start.Concat(ps.End)));
+                btmPanel.ClearBoard();
+                midPanel.ClearBoard();
+                topPanel.ClearBoard();
+                btmPanel.LightHolds(ps.Bottom);
+                midPanel.LightHolds(ps.Middle);
+                topPanel.LightHolds(ps.Top);
             }
             catch (MoonboardClientException mbe)
             {
-                CloseConnection();
+                btmPanel.CloseConnection();
+                midPanel.CloseConnection();
+                topPanel.CloseConnection();
                 throw mbe;
             }
-            CloseConnection();
+            btmPanel.CloseConnection();
+            midPanel.CloseConnection();
+            topPanel.CloseConnection();
         }
 
-        private void LightHolds(IEnumerable<string> holds)
-        {
-            SendCommand("SET", string.Join(" ", holds));
-        }
-
-        private void ClearBoard()
-        {
-            SendCommand("CLR");
-        }
-
-        private void SendCommand(string command, string data = null)
-        {
-            string cmd = string.Format("{0} {1}", command, CmdId);
-            if (data != null)
-            {
-                cmd += (" " + data);
-            }
-            Log.WriteLine(string.Format("Sending command '{0}'", cmd));
-            int totalBytesSent = 0;
-            byte[] sendBuffer = Encoding.ASCII.GetBytes(cmd + "\r\n");
-            while (totalBytesSent < sendBuffer.Length)
-            {
-                totalBytesSent += clientSock.Send(sendBuffer, totalBytesSent, sendBuffer.Length - totalBytesSent, SocketFlags.None);
-            }
-            WaitForAck(CmdId);
-            CmdId++;
-        }
-
-        private void WaitForAck(int cmdId)
-        {
-            string expected = string.Format("ACK {0}", cmdId);
-            string rcvd;
-            while (true)
-            {
-                ReceiveLines();
-                if (rcvdList.Count == 0) { throw new MoonboardClientException("WaitForAck(): No response received"); }
-                while (rcvdList.Count > 0)
-                {
-                    rcvd = rcvdList[0];
-                    rcvdList.RemoveAt(0);
-                    if (rcvd.Equals(expected)) { return; }
-                    throw new MoonboardClientException(string.Format("Expected '{0}', got '{1}'", expected, rcvd));
-                }
-            }
-        }
-
-        private void ReceiveLines()
-        {
-            char[] chars;
-            int bytesRcvd = 0;
-            byte[] rcvBuffer = new byte[256];
-            while (rcvdList.Count == 0)
-            {
-                try
-                {
-                    if ((bytesRcvd = clientSock.Receive(rcvBuffer, 0, rcvBuffer.Length, SocketFlags.None)) == 0)
-                    {
-                        throw new MoonboardClientException("Connection closed prematurely");
-                    }
-                }
-                catch (SocketException se)
-                {
-                    if (se.SocketErrorCode == SocketError.TimedOut)
-                    {
-                        throw new MoonboardClientException("ReceiveLines(): Timed out");
-                    }
-                    if (se.SocketErrorCode == SocketError.NotConnected)
-                    {
-                        throw new MoonboardClientException("ReceiveLines(): Socket not connected");
-                    }
-                    throw se;
-                }
-                catch (ObjectDisposedException)
-                {
-                    throw new MoonboardClientException("ReceiveLines(): Socket disposed while receiving");
-                }
-                chars = new char[bytesRcvd];
-                dec.GetChars(rcvBuffer, 0, bytesRcvd, chars, 0);
-                rcvdBuf += new string(chars);
-                int i;
-                while ((i = rcvdBuf.IndexOf("\r\n")) != -1)
-                {
-                    string rcvdStr = rcvdBuf.Substring(0, i);
-                    rcvdList.Add(rcvdStr);
-                    Log.WriteLine(string.Format("Received: {0}", rcvdStr));
-                    rcvdBuf = rcvdBuf.Substring(i + 2);
-                }
-            }
-        }
-
-        private void OpenConnection()
-        {
-            clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            clientSock.Connect(Address, Port);
-            clientSock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 10000);
-            rcvdList = new List<string>();
-            rcvdBuf = "";
-            Log.WriteLine("Connection opened");
-        }
-
-        public void CloseConnection()
-        {
-            if (clientSock != null && clientSock.Connected) { clientSock.Close(); }
-            clientSock = null;
-            Log.WriteLine("Connection closed");
-        }
     }
 
     public class DebugWriter : TextWriter
