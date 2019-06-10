@@ -36,15 +36,15 @@ namespace MoonServer
                 if (rowNum < 1 || rowNum > 17) { throw new InvalidHoldException(string.Format("Bad row num {0}", rowNum)); }
                 if (rowNum <= 6)
                 {
-                    Bottom.Add(string.Format("{0}{1}", colCode, (char)(rowNum + 6)));
+                    Bottom.Add(string.Format("{0}{1}", (char)(('A' - 1) + rowNum + 6), colCode));
                 }
                 else if (rowNum <= 12)
                 {
-                    Middle.Add(string.Format("{0}{1}", colCode, (char)(rowNum - 6)));
+                    Middle.Add(string.Format("{0}{1}", (char)(('A' - 1) + rowNum - 6), colCode));
                 }
                 else if (rowNum <= 17)
                 {
-                    Top.Add(string.Format("{0}{1}", colCode, (char)(rowNum - 12)));
+                    Top.Add(string.Format("{0}{1}", (char)(('A' - 1) + rowNum - 12), colCode));
                 }
                 else
                 {
@@ -56,7 +56,7 @@ namespace MoonServer
                 string colCode = m.Groups["1"].Value;
                 int rowNum = int.Parse(m.Groups["2"].Value);
                 if (rowNum > 6) { throw new InvalidHoldException(string.Format("Bad row num {0}", rowNum)); }
-                Bottom.Add(string.Format("{0}{1}", colCode, (char)(rowNum)));
+                Bottom.Add(string.Format("{0}{1}", (char)(('A' - 1) + rowNum), colCode));
             }
             foreach (string s in End)
             {
@@ -64,7 +64,7 @@ namespace MoonServer
                 string colCode = m.Groups["1"].Value;
                 int rowNum = int.Parse(m.Groups["2"].Value);
                 if (rowNum != 18) { throw new InvalidHoldException(string.Format("Bad row num {0}", rowNum)); }
-                Top.Add(string.Format("{0}{1}", colCode, (char)(rowNum - 12)));
+                Top.Add(string.Format("{0}{1}", (char)(('A' - 1) + rowNum - 12), colCode));
             }
         }
     }
