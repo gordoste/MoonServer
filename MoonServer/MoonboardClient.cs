@@ -174,9 +174,9 @@ namespace MoonServer
             Database = database;
             Log = log;
             Debug = false;
-            btmPanel = new PanelClient("192.168.20.101", 23, log);
-            midPanel = new PanelClient("192.168.20.102", 23, log);
-            topPanel = new PanelClient("192.168.20.103", 23, log);
+            btmPanel = new PanelClient("192.168.20.44", 4011, log);
+            midPanel = new PanelClient("192.168.20.44", 4012, log);
+            topPanel = new PanelClient("192.168.20.44", 4013, log);
         }
 
         public void ShowProblem(int id)
