@@ -36,9 +36,6 @@ namespace MoonServer.Models
 
         public int Rating { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<EndProblemPosition> EndProblemPositions { get; set; }
-
         public virtual Grade Grade { get; set; }
 
         public virtual HoldSetup HoldSetup { get; set; }
@@ -48,5 +45,11 @@ namespace MoonServer.Models
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StartProblemPosition> StartProblemPositions { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<EndProblemPosition> EndProblemPositions { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ProblemListEntry> ProblemListEntries { get; set; }
     }
 }

@@ -161,6 +161,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\ProblemListEntry.cs" />
+    <Compile Include="Models\ProblemList.cs" />
     <Compile Include="Models\EndProblemPosition.cs" />
     <Compile Include="Models\Grade.cs" />
     <Compile Include="Models\Hold.cs" />

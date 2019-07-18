@@ -19,6 +19,8 @@ namespace MoonServer.Models
         public virtual DbSet<ProblemPosition> ProblemPositions { get; set; }
         public virtual DbSet<Problem> Problems { get; set; }
         public virtual DbSet<StartProblemPosition> StartProblemPositions { get; set; }
+        public virtual DbSet<ProblemList> ProblemLists { get; set; }
+        public virtual DbSet<ProblemListEntry> ProblemListEntries { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -79,6 +81,16 @@ namespace MoonServer.Models
 
             modelBuilder.Entity<Problem>()
                 .HasMany(e => e.StartProblemPositions)
+                .WithRequired(e => e.Problem)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<ProblemList>()
+                .HasMany(e => e.ProblemListEntries)
+                .WithRequired(e => e.ProblemList)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Problem>()
+                .HasMany(e => e.ProblemListEntries)
                 .WithRequired(e => e.Problem)
                 .WillCascadeOnDelete(false);
         }
