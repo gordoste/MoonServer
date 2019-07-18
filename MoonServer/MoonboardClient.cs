@@ -25,6 +25,12 @@ namespace MoonServer
 
             public bool Debug { get; set; }
 
+            public static PanelClient FromConfig(string addrAndPort, TextWriter log)
+            {
+                string[] parts = addrAndPort.Split(':'); // Expect IP:port
+                return new PanelClient(IPAddress.Parse(parts[0]), Int32.Parse(parts[1]), log);
+            }
+
             public PanelClient(IPAddress address, int port) :
                 this(address, port, new DebugWriter())
             { }
@@ -174,9 +180,9 @@ namespace MoonServer
             Database = database;
             Log = log;
             Debug = false;
-            btmPanel = new PanelClient("192.168.20.44", 4011, log);
-            midPanel = new PanelClient("192.168.20.44", 4012, log);
-            topPanel = new PanelClient("192.168.20.44", 4013, log);
+            btmPanel = PanelClient.FromConfig(Constants.GetFileConfig("BottomPanel"), log);
+            midPanel = PanelClient.FromConfig(Constants.GetFileConfig("MiddlePanel"), log);
+            topPanel = PanelClient.FromConfig(Constants.GetFileConfig("TopPanel"), log);
         }
 
         public void ShowProblem(int id)
