@@ -12,15 +12,16 @@ namespace MoonServer
 {
     public class MoonboardClient
     {
+        // Client for a single panel (bottom/middle/top)
         public class PanelClient
         {
             private readonly IPAddress Address;
             private readonly int Port;
             private Socket clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             private readonly TextWriter Log;
-            private int CmdId = 1;
+            private int CmdId = 1; // Commands are sent with sequential command ID
             private readonly Decoder dec = Encoding.ASCII.GetDecoder();
-            private List<string> rcvdList = new List<string>();
+            private List<string> rcvdMsgList = new List<string>();
             private string rcvdBuf = "";
 
             public bool Debug { get; set; }
@@ -86,11 +87,11 @@ namespace MoonServer
                 while (true)
                 {
                     ReceiveLines();
-                    if (rcvdList.Count == 0) { throw new MoonboardClientException("WaitForAck(): No response received"); }
-                    while (rcvdList.Count > 0)
+                    if (rcvdMsgList.Count == 0) { throw new MoonboardClientException("WaitForAck(): No response received"); }
+                    while (rcvdMsgList.Count > 0)
                     {
-                        rcvd = rcvdList[0];
-                        rcvdList.RemoveAt(0);
+                        rcvd = rcvdMsgList[0];
+                        rcvdMsgList.RemoveAt(0);
                         if (rcvd.Equals(expected)) { return; }
                         throw new MoonboardClientException(string.Format("Expected '{0}', got '{1}'", expected, rcvd));
                     }
@@ -102,7 +103,7 @@ namespace MoonServer
                 char[] chars;
                 int bytesRcvd = 0;
                 byte[] rcvBuffer = new byte[256];
-                while (rcvdList.Count == 0)
+                while (rcvdMsgList.Count == 0)
                 {
                     try
                     {
@@ -134,7 +135,7 @@ namespace MoonServer
                     while ((i = rcvdBuf.IndexOf("\r\n")) != -1)
                     {
                         string rcvdStr = rcvdBuf.Substring(0, i);
-                        rcvdList.Add(rcvdStr);
+                        rcvdMsgList.Add(rcvdStr);
                         Log.WriteLine(string.Format("Received: {0}", rcvdStr));
                         rcvdBuf = rcvdBuf.Substring(i + 2);
                     }
@@ -146,7 +147,7 @@ namespace MoonServer
                 clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 clientSock.Connect(Address, Port);
                 clientSock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 10000);
-                rcvdList = new List<string>();
+                rcvdMsgList = new List<string>();
                 rcvdBuf = "";
                 Log.WriteLine("Connection opened");
             }
