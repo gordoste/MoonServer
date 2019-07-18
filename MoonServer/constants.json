@@ -2,8 +2,7 @@
   "Strings": {
     "AllFilterName": "X",
     "MaxProblemsReturned": 1500,
-    "TooManyProblemsCode": "TOO_MANY_PROBLEMS",
-    "MoonboardPort":  23
+    "TooManyProblemsCode": "TOO_MANY_PROBLEMS"
   },
   "Filters": [
     {
