@@ -1,4 +1,4 @@
-﻿@model IEnumerable<MoonServer.Models.Problem>
+﻿@model IEnumerable<MoonServer.Models.ProblemList>
 
 @{
     ViewBag.Title = "MoonBoard Problems";
@@ -58,6 +58,22 @@
 </div>
 
 <div class="grid"><div id="gridstart" hidden></div></div>
+
+<div class="row" id="lists">
+    <table class="table">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(m => item.Name)
+                </td>
+                <td>
+                    @item.ProblemListEntries.Count
+                </td>
+            </tr>
+        }
+    </table>
+</div>
 
 @section scripts {
     <script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.js"></script>
