@@ -5,36 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Web.Http;
 using System.Web.Http.Results;
 
 namespace MoonServer.Controllers
 {
-    public class ProblemViewModel
-    {
-        public string Grade { get; set; }
-        public string Rating { get; set; }
-        public string Repeats { get; set; }
-        public string Benchmark { get; set; }
-    }
-
-    public class ProblemResponse
-    {
-        public IEnumerable<ProblemProxy> Problems;
-        public HttpStatusCode Status;
-        public string SubStatus;
-        public string Message;
-    }
-
-    public class ChooseResponse
-    {
-        public HttpStatusCode Status;
-        public string SubStatus;
-        public string Message;
-        public int Id;
-    }
-
     public class ProblemsAPIController : ApiController
     {
         private static readonly MoonServerDB db = new MoonServerDB();

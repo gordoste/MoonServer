@@ -156,8 +156,11 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\ProblemListsAPIController.cs" />
     <Compile Include="Controllers\ProblemsAPIController.cs" />
     <Compile Include="Controllers\ProblemsController.cs" />
+    <Compile Include="Controllers\ProblemViewModel.cs" />
+    <Compile Include="Controllers\Responses.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
