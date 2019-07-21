@@ -5,6 +5,9 @@
     List<string> gradeList = Constants.GetFilter("grade").Categories;
     gradeList.Sort(new MoonServer.Models.AmericanGradeComparer());
 }
+
+<link href="~/lib/tabulator/css/tabulator.min.css" rel="stylesheet">
+
 <div class="container">
     <div class="row">
         <div class="col-8">
@@ -50,96 +53,62 @@
                 </div>
 
                 <div class="filters form-text"><input type="text" maxlength="20" id="namefilter" /></div>
-
-                <div id="sorts" class="button-group">
-                    <button class="button-blue is-checked" data-sort-by="name">name</button>
-                    <button class="button-blue" data-sort-by="grade">grade</button>
-                    <button class="button-blue" data-sort-by="rating">rating</button>
-                    <button class="button-blue" data-sort-by="repeats">repeats</button>
-                </div>
             </div>
         </div>
         <div class="col-4" style="height:200px" id="lists">
             <table class="table">
                 @foreach (var item in Model)
                 {
-                <tr class="list-select" id="">
-                    <td>
-                        @Html.DisplayFor(m => item.Name)
-                    </td>
-                    <td>
-                        @item.ProblemListEntries.Count
-                        <span class="listId" hidden>@item.Id</span>                        
-                    </td>
-                </tr>
+                    <tr class="list-select" id="">
+                        <td>
+                            @Html.DisplayFor(m => item.Name)
+                        </td>
+                        <td>
+                            @item.ProblemListEntries.Count
+                            <span class="listId" hidden>@item.Id</span>
+                        </td>
+                    </tr>
                 }
             </table>
         </div>
 
     </div>
 
-    <div class="row w-100 grid"><div id="gridstart" hidden></div></div>
+    <div class="row w-100" id="problems"></div>
 </div>
 @section scripts {
-    <script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.js"></script>
+    <script type="text/javascript" src="~/lib/tabulator/js/tabulator.min.js"></script>
 
     <script language="javascript">
-        var filterFns = {
-            grade: function (elem) {
-                return $(elem).find('.grade').text() == postFilters["grade"];
-            },
-            name: function (elem) {
-                return $(elem).find('.name').text().toLowerCase()
-                    .startsWith(postFilters["name"].toLowerCase());
-            },
-            repeats: function (elem) {
-                return parseInt($(elem).find('.repeats').text()) >= parseInt(postFilters["repeats"]);
-            },
-            rating: function (elem) {
-                return parseInt($(elem).find('.rating').text()) >= parseInt(postFilters["rating"]);
-            },
-            benchmark: function (elem) {
-                return $(elem).find('.benchmark').text() == "B";
-            }
-        };
-
         $('#probcount').hide();
         $('#resetbtn').hide();
 
         var postFilters = {}; // No filters at the start
-        var filterFn = function () {
-            for (var key in postFilters) {
-                var fn = filterFns[key];
-                if (!fn(this)) { return false; }
+        var refreshFilters = function () {
+            var _filters = [];
+            if (postFilters['name']) {
+                _filters.push({ field: 'Name', type: 'like', value: postFilters['name'] });
             }
-            return true;
+            if (postFilters['grade']) {
+                _filters.push({ field: 'Grade', type: '=', value: postFilters['grade'] });
+            }
+            if (postFilters['repeats']) {
+                _filters.push({ field: 'Repeats', type: '>=', value: postFilters['repeats'] });
+            }
+            if (postFilters['rating']) {
+                _filters.push({ field: 'Rating', type: '>=', value: postFilters['rating'] });
+            }
+            if (postFilters['benchmark']) {
+                _filters.push({ field: 'IsBenchmark', type: '=', value: true });
+            }
+            $table.setFilter(_filters);
+            $('#probcount').text($table.getDataCount());
         };
 
-        // init Isotope
+        // init table
         var $selectedProb;
         var $selectedList;
-        var $grid = $('.grid');
-        function updateGrid() {
-            $grid = $('.grid').isotope({
-                itemSelector: '.element-item',
-                layoutMode: 'fitRows',
-                transitionDuration: 0,
-                filter: filterFn,
-                getSortData: {
-                    name: '.name',
-                    grade: function (elem) { return parseInt($(elem).find('.grade').text().replace(/V/g, '')); },
-                    rating: '.rating parseInt',
-                    repeats: '.repeats parseInt'
-                },
-                sortAscending: {
-                    name: true,
-                    grade: true,
-                    rating: false,
-                    repeats: false
-                },
-                sortBy: 'name'
-            });
-        };
+        var $table;
 
         // Set up a trigger on key press which will apply filter after 1 second
         // Timer restarts if another key press occurs
@@ -151,16 +120,11 @@
             }
             nameFilterTimeout = setTimeout(function () {
                 postFilters['name'] = $(that).val();
-                $grid.isotope({ filter: filterFn });
+                refreshFilters();
             }, 1000);
         });
 
         // bind sort button click
-        $('#sorts').on( 'click tap', 'button', function() {
-          var sortByValue = $(this).attr('data-sort-by');
-          $grid.isotope({ sortBy: sortByValue });
-        });
-
         // change is-checked class on buttons
         $('.button-group').each(function (i, buttonGroup) {
             var $buttonGroup = $(buttonGroup);
@@ -172,40 +136,46 @@
 
         function showProblems(data) {
             if (data['Status'] == 200) {
-                $('.element-item').remove();
-                for (var i = 0; i < data['Problems'].length; i++) {
-                    var prob = data['Problems'][i];
-                    var probDiv = '<div class="element-item ' + prob.GradeName + '">' +
-                        '<h3 class="name">' + prob.Name + '</h3>' +
-                        '<p class="grade">' + prob.GradeName + '</p>' +
-                        '<p class="repeats">' + prob.Repeats + '</p>' +
-                        '<p class="rating">' + prob.Rating + '</p>' +
-                        '<div class="benchmark">' + (prob.IsBenchmark ? "B" : "") + '</div>' +
-                        '<p class="probId" hidden>' + prob.Id + '</p>' +
-                        '</div>';
-                    $grid.append(probDiv);
-                }
-                $('#probcount').text(data['Problems'].length).show();
-                updateGrid();
-                // set up handler for selecting a problem
-                $('.element-item').on('click tap', function () {
-                    if ($selectedProb) $selectedProb.removeClass('selected');
-                    var $src = $(this);
-                    $.ajax({
-                        type: 'GET',
-                        url: "/api/Problems/Choose/" + $src.find('.probId').text()
-                    })
+                $table = new Tabulator("#problems", {
+                    data: data['Problems'],           //load row data from array
+                    layout: "fitColumns",      //fit columns to width of table
+                    tooltips: true,            //show tool tips on cells
+                    pagination: "local",       //paginate the data
+                    paginationSize: 20,        //allow 20 rows per page of data
+                    movableColumns: true,      //allow column order to be changed
+                    resizableRows: true,       //allow row order to be changed
+                    initialSort: [             //set the initial sort order of the data
+                        { column: "Name", dir: "asc" },
+                    ],
+                    columns: [                 //define the table columns
+                        { title: "Name", field: "Name" },
+                        { title: "Grade", field: "GradeName" },
+                        { title: "Repeats", field: "Repeats" },
+                        { title: "Rating", field: "Rating" },
+                        { title: "Benchmark", field: "IsBenchmark" },
+                        { title: "Id", field: "Id", visible: false }
+                    ],
+                    selectable: 1,
+                    rowSelected: function (row) {
+                        $.ajax({
+                            type: 'GET',
+                            url: "/api/Problems/Choose/" + row.getData().Id
+                        })
                         .done(function (data) {
-                            if (data['Status'] == 200) {
-                                $src.addClass('selected');
-                                $selectedProb = $src;
-                            }
-                            else {
+                            if (data['Status'] != 200) {
                                 if (!data['Message']) { data['Message'] = 'Unknown'; }
                                 alert("HTTP code " + data['Status'] + ": " + data['Message']);
                             }
                         });
+
+                    }
                 });
+
+                $('#probcount').text($table.getDataCount());
+                //updateGrid();
+                // set up handler for selecting a problem
+                //$('.element-item').on('click tap', function () {
+                //});
             }
             else {
                 if (!data['Message']) { data['Message'] = 'Unknown'; }
@@ -274,8 +244,7 @@
                         } else {
                             postFilters[filterParts[0]] = filterParts[1];
                         }
-                        $grid.isotope({ filter: filterFn });
-                        $('#probcount').text($grid.isotope('getFilteredItemElements').length);
+                        refreshFilters();
                     });
                     $('#datagetter').hide();
                     $('#resetbtn').show();

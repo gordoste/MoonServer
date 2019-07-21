@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "tabulator@4.2.7",
+      "destination": "lib/tabulator/"
+    }
+  ]
+}
