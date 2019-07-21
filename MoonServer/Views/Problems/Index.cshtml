@@ -11,42 +11,48 @@
 <div class="container">
     <div class="row">
         <div class="col-8">
-            <div style="height:100px">
+            <div style="height:50px">
                 <div id="datagetter" class="button-blue">Get Data</div>
                 <div id="resetbtn" class="button-blue">Reset</div>
                 <div id="probcount" class="h1 col-2"></div>
             </div>
-            <div style="height:100px">
-                <div class="filters button-group">
-                    @foreach (var g in gradeList)
-                    {
-                        <button class="button-blue" data-filter="grade:@g">@g</button>
-                    }
-                    <button class="button-blue is-checked allfilter" data-filter="grade:*">show all</button>
-                </div>
-
-                <div class="filters button-group">
-                    @foreach (var i in Constants.GetFilter("repeats").Categories.ConvertAll(s => int.Parse(s)))
-                    {
-                        if (i > 0)
+            <div style="height:50px">
+                <div>
+                    <label>Grade:</label>
+                    <div class="filters button-group">
+                        @foreach (var g in gradeList)
                         {
-                            <button class="button-blue" data-filter="repeats:@i">@i+ repeat@(i > 1 ? "s" : "")</button>
+                            <button class="button-blue" data-filter="grade:@g">@g</button>
                         }
-                    }
-                    <button class="button-blue is-checked allfilter" data-filter="repeats:*">show all</button>
+                        <button class="button-blue is-checked allfilter" data-filter="grade:*">show all</button>
+                    </div>
                 </div>
-
-                <div class="filters button-group">
-                    @foreach (var i in Constants.GetFilter("rating").Categories.ConvertAll(s => int.Parse(s)))
-                    {
-                        if (i > 0)
+                <div>
+                    <label>Repeats:</label>
+                    <div class="filters button-group">
+                        @foreach (var r in Constants.GetFilter("repeats").Categories.ConvertAll(s => int.Parse(s)))
                         {
-                            <button class="button-blue" data-filter="rating:@i">@i star@(i > 1 ? "s" : "")</button>
+                            if (r > 0)
+                            {
+                                <button class="button-blue" data-filter="repeats:@r">>@r</button>
+                            }
                         }
-                    }
-                    <button class="button-blue is-checked allfilter" data-filter="rating:*">show all</button>
+                        <button class="button-blue is-checked allfilter" data-filter="repeats:*">show all</button>
+                    </div>
                 </div>
-
+                <div>
+                    <label>Stars:</label>
+                    <div class="filters button-group">
+                        @foreach (var r in Constants.GetFilter("rating").Categories.ConvertAll(s => int.Parse(s)))
+                        {
+                            if (r > 0)
+                            {
+                                <button class="button-blue" data-filter="rating:@r">@( r + (r < 3 ? "+" : "") )</button>
+                            }
+                        }
+                        <button class="button-blue is-checked allfilter" data-filter="rating:*">show all</button>
+                    </div>
+                </div>
                 <div class="filters button-group">
                     <button class="button-blue" data-filter="benchmark:B">benchmark only</button>
                     <button class="button-blue is-checked allfilter" data-filter="benchmark:*">show all</button>
@@ -56,25 +62,21 @@
             </div>
         </div>
         <div class="col-4" style="height:200px" id="lists">
-            <table class="table">
-                @foreach (var item in Model)
-                {
-                    <tr class="list-select" id="">
-                        <td>
-                            @Html.DisplayFor(m => item.Name)
-                        </td>
-                        <td>
-                            @item.ProblemListEntries.Count
-                            <span class="listId" hidden>@item.Id</span>
-                        </td>
-                    </tr>
-                }
-            </table>
         </div>
 
     </div>
 
     <div class="row w-100" id="problems"></div>
+
+
+    @{ int i = 0; }
+    <text id="list-data" hidden>
+        @(++i > 1 ? "," : "" )
+        @foreach (var item in Model)
+        {
+            @Html.Raw(item.PropertiesAsJson());
+        }
+    </text>
 </div>
 @section scripts {
     <script type="text/javascript" src="~/lib/tabulator/js/tabulator.min.js"></script>
@@ -106,9 +108,8 @@
         };
 
         // init table
-        var $selectedProb;
-        var $selectedList;
         var $table;
+        var $listTable;
 
         // Set up a trigger on key press which will apply filter after 1 second
         // Timer restarts if another key press occurs
@@ -184,25 +185,6 @@
             }
         };
 
-        $('.list-select').on('click tap', function () {
-            if ($selectedList) $selectedList.removeClass('selected');
-            var $src = $(this);
-            $.ajax({
-                type: 'GET',
-                url: "/api/ProblemLists/Choose/" + $src.find('.listId').text()
-            })
-                .done(function (data) {
-                    if (data['Status'] == 200) {
-                        $src.addClass('selected');
-                        $selectedList = $src;
-                        showProblems(data);
-                    }
-                    else {
-                        if (!data['Message']) { data['Message'] = 'Unknown'; }
-                        alert("HTTP code " + data['Status'] + ": " + data['Message']);
-                    }
-                });
-        });
         $('#datagetter').on('click tap', function () {
             var preFilters = {};
             $('.filters button.is-checked').each(function (i, e) {
@@ -257,6 +239,30 @@
                 $('#probcount').hide();
                 $('#datagetter').show();
                 $(this).hide();
+            });
+
+            $(document).ready(function () {
+                $listTable = new Tabulator("#lists", {
+                    data: eval('[' + $('#list-data').text().trim() + ']'),            //load row data from array
+                    layout: "fitColumns",      //fit columns to width of table
+                    tooltips: true,            //show tool tips on cells
+                    movableColumns: true,      //allow column order to be changed
+                    resizableRows: true,       //allow row order to be changed
+                    initialSort: [             //set the initial sort order of the data
+                        { column: "Name", dir: "asc" },
+                    ],
+                    columns: [                 //define the table columns
+                        { title: "Name", field: "Name" },
+                        { title: "Id", field: "Id", visible: false }
+                    ],
+                    selectable: 1,
+                    rowSelected: function (row) {
+                        $.ajax({
+                            type: 'GET',
+                            url: "/api/ProblemLists/Choose/" + row.getData().Id
+                        }).done(function (data) { showProblems(data); });
+                    }
+                });
             });
         });
 

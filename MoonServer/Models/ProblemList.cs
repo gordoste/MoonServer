@@ -1,11 +1,15 @@
 ﻿namespace MoonServer.Models
 {
+    using MoonServer.Models.Proxy;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
+    using System.Web.Script.Serialization;
 
     public partial class ProblemList
     {
+        private JavaScriptSerializer JSONSerializer = new JavaScriptSerializer();
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public ProblemList()
         {
@@ -21,5 +25,10 @@
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ProblemListEntry> ProblemListEntries { get; set; }
+
+        public string PropertiesAsJson()
+        {
+            return JSONSerializer.Serialize(new ProblemListProxy(this));
+        }
     }
 }
