@@ -107,10 +107,7 @@ namespace MoonServer
                 {
                     try
                     {
-                        if ((bytesRcvd = clientSock.Receive(rcvBuffer, 0, rcvBuffer.Length, SocketFlags.None)) == 0)
-                        {
-                            throw new MoonboardClientException("Connection closed prematurely");
-                        }
+                        bytesRcvd = clientSock.Receive(rcvBuffer, 0, rcvBuffer.Length, SocketFlags.None);
                     }
                     catch (SocketException se)
                     {
@@ -122,15 +119,26 @@ namespace MoonServer
                         {
                             throw new MoonboardClientException("ReceiveLines(): Socket not connected");
                         }
+                        if (se.SocketErrorCode == SocketError.ConnectionAborted)
+                        {
+                            throw new MoonboardClientException("ReceiveLines(): Connection aborted");
+                        }
+                        if (se.SocketErrorCode == SocketError.Interrupted)
+                        {
+                            bytesRcvd = 0;
+                        }
                         throw se;
                     }
                     catch (ObjectDisposedException)
                     {
                         throw new MoonboardClientException("ReceiveLines(): Socket disposed while receiving");
                     }
-                    chars = new char[bytesRcvd];
-                    dec.GetChars(rcvBuffer, 0, bytesRcvd, chars, 0);
-                    rcvdBuf += new string(chars);
+                    if (bytesRcvd > 0)
+                    {
+                        chars = new char[bytesRcvd];
+                        dec.GetChars(rcvBuffer, 0, bytesRcvd, chars, 0);
+                        rcvdBuf += new string(chars);
+                    }
                     int i;
                     while ((i = rcvdBuf.IndexOf("\r\n")) != -1)
                     {
