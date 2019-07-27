@@ -157,6 +157,8 @@
                         { title: "Id", field: "Id", visible: false }
                     ],
                     selectable: 1,
+                    rowClick: function (e, row) { row.toggleSelect(); },
+                    rowTap: function (e, row) { row.toggleSelect(); },
                     rowSelected: function (row) {
                         $.ajax({
                             type: 'GET',
@@ -256,6 +258,8 @@
                         { title: "Id", field: "Id", visible: false }
                     ],
                     selectable: 1,
+                    rowClick: function (e, row) { row.toggleSelect(); },
+                    rowTap: function (e, row) { row.toggleSelect(); },
                     rowSelected: function (row) {
                         $.ajax({
                             type: 'GET',
