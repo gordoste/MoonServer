@@ -35,7 +35,7 @@ body {
     background-image: linear-gradient( to bottom, hsla(0, 0%, 0%, 0), hsla(0, 0%, 0%, 0.2) );
     color: #222;
     font-family: sans-serif;
-    font-size: 16px;
+    font-size: 12px;
     text-shadow: 0 1px white;
     cursor: pointer;
 }
@@ -73,7 +73,7 @@ body {
     background-image: linear-gradient( to bottom, hsla(0, 0%, 0%, 0), hsla(0, 0%, 0%, 0.2) );
     color: #222;
     font-family: sans-serif;
-    font-size: 16px;
+    font-size: 12px;
     text-shadow: 0 1px white;
     cursor: pointer;
 }
@@ -127,115 +127,3 @@ body {
         .button-group button:last-child {
             border-radius: 0 0.5em 0.5em 0;
         }
-
-/* ---- isotope ---- */
-
-.grid {
-    border: 1px solid #333;
-}
-
-    /* clear fix */
-    .grid:after {
-        content: '';
-        display: block;
-        clear: both;
-    }
-
-/* ---- .element-item ---- */
-
-.element-item {
-    position: relative;
-    float: left;
-    width: 100px;
-    height: 100px;
-    margin: 5px;
-    padding: 10px;
-    background: #888;
-    color: #262524;
-}
-
-    .element-item > * {
-        margin: 0;
-        padding: 0;
-    }
-
-    .element-item .name {
-        position: absolute;
-        left: 10px;
-        top: 60px;
-        text-transform: none;
-        letter-spacing: 0;
-        font-size: 12px;
-        font-weight: normal;
-    }
-
-    .element-item .grade {
-        position: absolute;
-        left: 10px;
-        top: 0px;
-        font-size: 42px;
-        font-weight: bold;
-        color: white;
-    }
-
-    .element-item .repeats {
-        position: absolute;
-        right: 8px;
-        top: 5px;
-    }
-
-    .element-item .rating {
-        position: absolute;
-        left: 10px;
-        top: 76px;
-        font-size: 12px;
-    }
-
-    .element-item.V12 {
-        background: #F00;
-        background: hsl( 0, 100%, 50%);
-    }
-
-    .element-item.V11 {
-        background: #F80;
-        background: hsl( 36, 100%, 50%);
-    }
-
-    .element-item.V10 {
-        background: #FF0;
-        background: hsl( 72, 100%, 50%);
-    }
-
-    .element-item.V9 {
-        background: #0F0;
-        background: hsl( 108, 100%, 50%);
-    }
-
-    .element-item.V8 {
-        background: #0F8;
-        background: hsl( 144, 100%, 50%);
-    }
-
-    .element-item.V7 {
-        background: #0FF;
-        background: hsl( 180, 100%, 50%);
-    }
-
-    .element-item.V6 {
-        background: #08F;
-        background: hsl( 216, 100%, 50%);
-    }
-
-    .element-item.V5 {
-        background: #F0F;
-        background: hsl( 288, 100%, 50%);
-    }
-
-    .element-item.V4 {
-        background: #F08;
-        background: hsl( 324, 100%, 50%);
-    }
-
-    .element-item.selected {
-        border: 5px solid #8F8;
-    }
