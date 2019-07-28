@@ -11,63 +11,74 @@
 <div class="container">
     <div class="row">
         <div class="col-8">
-            <div style="height:50px">
-                <div id="datagetter" class="button-blue">Get Data</div>
-                <div id="resetbtn" class="button-blue">Reset</div>
-                <div id="probcount" class="h1 col-2"></div>
+            <div class="row">
+                <div class="col-3">
+                    <label for="gradeGrp">Grade:</label>
+                </div>
+                <div id="gradeGrp" class="filters btn-group btn-group-sm" role="group">
+                    @foreach (var g in gradeList)
+                    {
+                        <button type="button" class="btn btn-outline-primary" data-filter="grade:@g">@g</button>
+                    }
+                    <button type="button" class="btn btn-outline-primary active allfilter" data-filter="grade:*">show all</button>
+                </div>
             </div>
-            <div style="height:50px">
-                <div>
-                    <label>Grade:</label>
-                    <div class="filters button-group">
-                        @foreach (var g in gradeList)
+            <div class="row">
+                <div class="col-3">
+                    <label for="repeatsGrp">Repeats:</label>
+                </div>
+                <div id="repeatsGrp" class="filters btn-group btn-group-sm" role="group">
+                    @foreach (var r in Constants.GetFilter("repeats").Categories.ConvertAll(s => int.Parse(s)))
+                    {
+                        if (r > 0)
                         {
-                            <button class="button-blue" data-filter="grade:@g">@g</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="repeats:@r">>@r</button>
                         }
-                        <button class="button-blue is-checked allfilter" data-filter="grade:*">show all</button>
-                    </div>
+                    }
+                    <button type="button" class="btn btn-outline-primary active allfilter" data-filter="repeats:*">show all</button>
                 </div>
-                <div>
-                    <label>Repeats:</label>
-                    <div class="filters button-group">
-                        @foreach (var r in Constants.GetFilter("repeats").Categories.ConvertAll(s => int.Parse(s)))
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <label for="ratingGrp">Rating:</label>
+                </div>
+                <div id="ratingGrp" class="filters btn-group btn-group-sm" role="group">
+                    @foreach (var r in Constants.GetFilter("rating").Categories.ConvertAll(s => int.Parse(s)))
+                    {
+                        if (r > 0)
                         {
-                            if (r > 0)
-                            {
-                                <button class="button-blue" data-filter="repeats:@r">>@r</button>
-                            }
+                            <button type="button" class="btn btn-outline-primary" data-filter="rating:@r">@( r + (r < 3 ? "+" : "") )</button>
                         }
-                        <button class="button-blue is-checked allfilter" data-filter="repeats:*">show all</button>
-                    </div>
+                    }
+                    <button type="button" class="btn btn-outline-primary active allfilter" data-filter="rating:*">show all</button>
                 </div>
-                <div>
-                    <label>Stars:</label>
-                    <div class="filters button-group">
-                        @foreach (var r in Constants.GetFilter("rating").Categories.ConvertAll(s => int.Parse(s)))
-                        {
-                            if (r > 0)
-                            {
-                                <button class="button-blue" data-filter="rating:@r">@( r + (r < 3 ? "+" : "") )</button>
-                            }
-                        }
-                        <button class="button-blue is-checked allfilter" data-filter="rating:*">show all</button>
-                    </div>
+            </div>
+            <div class="row">
+                <div class="col-5">
+                    <label for="benchmarkGrp">Benchmark only?</label>
                 </div>
-                <div class="filters button-group">
-                    <button class="button-blue" data-filter="benchmark:B">benchmark only</button>
-                    <button class="button-blue is-checked allfilter" data-filter="benchmark:*">show all</button>
+                <div id="benchmarkGrp" class="filters btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary" data-filter="benchmark:B">yes</button>
+                    <button type="button" class="btn btn-outline-primary active allfilter" data-filter="benchmark:*">no</button>
                 </div>
-
-                <div class="filters form-text"><input type="text" maxlength="20" id="namefilter" /></div>
+            </div>
+            <div class="row">
+                <div class="col-5 input-group">
+                    <div class="input-group-prepend"><span class="input-group-text">Name</span></div>
+                    <input type="text" class="form-control" maxlength="20" id="namefilter" />
+                </div>
+                <button type="button" id="datagetter" class="col-3 btn btn-primary">Get Data</button>
+                <button type="button" id="resetbtn" class="col-3 btn btn-primary hide">Reset</button>
+                <div id="probcount" class="h2 col-4"></div>
             </div>
         </div>
+
         <div class="col-4" style="height:200px" id="lists">
         </div>
-
     </div>
 
-    <div class="row w-100" id="problems"></div>
 
+    <div class="row w-100" id="problems"></div>
 
     @{ int i = 0; }
     <text id="list-data" hidden>
@@ -104,7 +115,7 @@
                 _filters.push({ field: 'IsBenchmark', type: '=', value: true });
             }
             $table.setFilter(_filters);
-            $('#probcount').text($table.getDataCount());
+            $('#probcount').text($table.getDataCount()).show();
         };
 
         // init table
@@ -125,21 +136,12 @@
             }, 1000);
         });
 
-        // bind sort button click
-        // change is-checked class on buttons
-        $('.button-group').each(function (i, buttonGroup) {
-            var $buttonGroup = $(buttonGroup);
-            $buttonGroup.on('click tap', 'button', function () {
-                $buttonGroup.find('.is-checked').removeClass('is-checked');
-                $(this).addClass('is-checked');
-            });
-        });
-
         function showProblems(data) {
             if (data['Status'] == 200) {
                 $table = new Tabulator("#problems", {
                     data: data['Problems'],           //load row data from array
-                    layout: "fitColumns",      //fit columns to width of table
+                    layout: "fitData",      //fit columns to width of table
+                    layoutColumnsOnNewData: true,
                     tooltips: true,            //show tool tips on cells
                     pagination: "local",       //paginate the data
                     paginationSize: 20,        //allow 20 rows per page of data
@@ -174,7 +176,7 @@
                     }
                 });
 
-                $('#probcount').text($table.getDataCount());
+                $('#probcount').text($table.getDataCount()).show();
             }
             else {
                 if (!data['Message']) { data['Message'] = 'Unknown'; }
@@ -189,7 +191,7 @@
 
         $('#datagetter').on('click tap', function () {
             var preFilters = {};
-            $('.filters button.is-checked').each(function (i, e) {
+            $('.filters button.active').each(function (i, e) {
                 var filterParts = $(this).attr('data-filter').split(':');
                 if (filterParts[1] == "*") {
                     preFilters[filterParts[0]] = "@Constants.GetString("AllFilterName")";
@@ -206,18 +208,18 @@
                 .done(function (data) {
                     showProblems(data);
                     // clear filters
-                    $('.filters button.is-checked').each(function (i, e) {
+                    $('.filters button.active').each(function (i, e) {
                         var elem = $(e);
                         if (elem.hasClass('allfilter')) {
-                            elem.removeClass('button-blue').addClass('button-red');
-                            elem.siblings().removeClass('button-blue').addClass('button-red');
+                            elem.removeClass('btn-outline-primary').addClass('btn-outline-danger');
+                            elem.siblings().removeClass('btn-outline-primary').addClass('btn-outline-danger');
                         }
                         else {
                             elem.siblings().attr('disabled', true);
                         }
                     });
                     // set up handler for filter button click
-                    $('.filters .button-red').on('click tap', function () {
+                    $('.filters .btn-outline-danger').on('click tap', function () {
                         var filterParts = $(this).attr('data-filter').split(':');
                         if (filterParts[1] == "*") {
                             delete postFilters[filterParts[0]];
@@ -231,44 +233,48 @@
                 });
 
             $('#resetbtn').on('click tap', function () {
-                $('.element-item').remove();
                 $('.filters button')
                     .removeAttr('disabled')
-                    .removeClass(['is-checked', 'button-red'])
-                    .addClass('button-blue');
-                $('.filters').off('click tap', 'button-blue');
-                $('button.allfilter').addClass('is-checked');
+                    .removeClass(['active', 'btn-outline-danger'])
+                    .addClass('btn-outline-primary');
+                $('.filters').off('click tap', 'btn-outline-primary');
+                $('button.allfilter').addClass('active');
                 $('#probcount').hide();
                 $('#datagetter').show();
                 $(this).hide();
             });
 
-            $(document).ready(function () {
-                $listTable = new Tabulator("#lists", {
-                    data: eval('[' + $('#list-data').text().trim() + ']'),            //load row data from array
-                    layout: "fitColumns",      //fit columns to width of table
-                    tooltips: true,            //show tool tips on cells
-                    movableColumns: true,      //allow column order to be changed
-                    resizableRows: true,       //allow row order to be changed
-                    initialSort: [             //set the initial sort order of the data
-                        { column: "Name", dir: "asc" },
-                    ],
-                    columns: [                 //define the table columns
-                        { title: "Name", field: "Name" },
-                        { title: "Id", field: "Id", visible: false }
-                    ],
-                    selectable: 1,
-                    rowClick: function (e, row) { row.toggleSelect(); },
-                    rowTap: function (e, row) { row.toggleSelect(); },
-                    rowSelected: function (row) {
-                        $.ajax({
-                            type: 'GET',
-                            url: "/api/ProblemLists/Choose/" + row.getData().Id
-                        }).done(function (data) { showProblems(data); });
-                    }
-                });
-            });
         });
 
+        $(document).ready(function () {
+            $('.btn-group button').on('click tap', function () {
+                $(this).siblings('button').removeClass('active');
+                $(this).addClass('active');
+            });
+
+            $listTable = new Tabulator("#lists", {
+                data: eval('[' + $('#list-data').text().trim() + ']'),            //load row data from array
+                layout: "fitColumns",      //fit columns to width of table
+                tooltips: true,            //show tool tips on cells
+                movableColumns: true,      //allow column order to be changed
+                resizableRows: true,       //allow row order to be changed
+                initialSort: [             //set the initial sort order of the data
+                    { column: "Name", dir: "asc" },
+                ],
+                columns: [                 //define the table columns
+                    { title: "Name", field: "Name" },
+                    { title: "Id", field: "Id", visible: false }
+                ],
+                selectable: 1,
+                rowClick: function (e, row) { row.toggleSelect(); },
+                rowTap: function (e, row) { row.toggleSelect(); },
+                rowSelected: function (row) {
+                    $.ajax({
+                        type: 'GET',
+                        url: "/api/ProblemLists/Choose/" + row.getData().Id
+                    }).done(function (data) { showProblems(data); });
+                }
+            });
+        });
     </script>
 }
