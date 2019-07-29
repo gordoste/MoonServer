@@ -415,6 +415,10 @@
     <Content Include="Content\jquery.mobile.theme-1.4.5.min.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="lib\jquery-modal\jquery.modal.css" />
+    <Content Include="lib\jquery-modal\jquery.modal.js" />
+    <Content Include="lib\jquery-modal\jquery.modal.min.css" />
+    <Content Include="lib\jquery-modal\jquery.modal.min.js" />
     <Content Include="lib\tabulator\css\bootstrap\tabulator_bootstrap.css" />
     <Content Include="lib\tabulator\css\bootstrap\tabulator_bootstrap.min.css" />
     <Content Include="lib\tabulator\css\bootstrap\tabulator_bootstrap4.css" />

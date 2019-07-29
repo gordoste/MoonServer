@@ -6,11 +6,12 @@
     gradeList.Sort(new MoonServer.Models.AmericanGradeComparer());
 }
 
-<link href="~/lib/tabulator/css/tabulator.min.css" rel="stylesheet">
+<link href="~/lib/tabulator/css/tabulator.min.css" rel="stylesheet" />
+<link href="~/lib/jquery-modal/jquery.modal.min.css" rel="stylesheet" />
 
 <div class="container">
     <div class="row">
-        <div class="col-8">
+        <div class="col-8" id="filterDiv">
             <div class="row">
                 <div class="col-3">
                     <label for="gradeGrp">Grade:</label>
@@ -73,12 +74,15 @@
             </div>
         </div>
 
-        <div class="col-4" style="height:200px" id="lists">
+        <div class="col-4">
+            <div class="row" id="lists"></div>
+            <div class="row" id="addDiv"><button type="button" id="addBtn" class="btn btn-primary disabled">Add This Problem</button></div>
         </div>
     </div>
 
 
     <div class="row w-100" id="problems"></div>
+    <div id="addLists" class="modal"><div id="addListsTbl"></div><a href="#" rel="modal:close">Close</a></div>
 
     @{ int i = 0; }
     <text id="list-data" hidden>
@@ -91,6 +95,7 @@
 </div>
 @section scripts {
     <script type="text/javascript" src="~/lib/tabulator/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="~/lib/jquery-modal/jquery.modal.min.js"></script>
 
     <script language="javascript">
         $('#probcount').hide();
@@ -118,9 +123,10 @@
             $('#probcount').text($table.getDataCount()).show();
         };
 
-        // init table
+        // tables
         var $table;
         var $listTable;
+        var $addListTable;
 
         // Set up a trigger on key press which will apply filter after 1 second
         // Timer restarts if another key press occurs
@@ -159,7 +165,6 @@
                         { title: "Id", field: "Id", visible: false }
                     ],
                     selectable: 1,
-                    rowClick: function (e, row) { row.toggleSelect(); },
                     rowTap: function (e, row) { row.toggleSelect(); },
                     rowSelected: function (row) {
                         $.ajax({
@@ -172,8 +177,16 @@
                                 alert("HTTP code " + data['Status'] + ": " + data['Message']);
                             }
                         });
-
+                    },
+                    rowSelectionChanged: function (data, rows) {
+                        if (data.length == 0) {
+                            $('#addBtn').addClass('disabled');
+                        }
+                        else {
+                            $('#addBtn').removeClass('disabled');
+                        }
                     }
+
                 });
 
                 $('#probcount').text($table.getDataCount()).show();
@@ -269,7 +282,6 @@
                     { title: "Id", field: "Id", visible: false }
                 ],
                 selectable: 1,
-                rowClick: function (e, row) { row.toggleSelect(); },
                 rowTap: function (e, row) { row.toggleSelect(); },
                 rowSelected: function (row) {
                     $.ajax({
@@ -277,6 +289,34 @@
                         url: "/api/ProblemLists/Choose/" + row.getData().Id
                     }).done(function (data) { showProblems(data); });
                 }
+            });
+
+            $('#addBtn').on('click tap', function () {
+                $('#addLists').modal();
+                $addListTable = new Tabulator("#addListsTbl", {
+                    data: eval('[' + $('#list-data').text().trim() + ']'),            //load row data from array
+                    layout: "fitData",         //fit columns to width of data
+                    layoutColumnsOnNewData: true,
+                    tooltips: true,            //show tool tips on cells
+                    movableColumns: false,     //allow column order to be changed
+                    resizableRows: false,      //allow row order to be changed
+                    initialSort: [             //set the initial sort order of the data
+                        { column: "Name", dir: "asc" },
+                    ],
+                    columns: [                 //define the table columns
+                        { title: "Name", field: "Name" },
+                        { title: "Count", field: "Count" },
+                        { title: "Id", field: "Id", visible: false }
+                    ],
+                    selectable: 1,
+                    rowTap: function (e, row) { row.toggleSelect(); },
+                    rowSelected: function (row) {
+                        var listId = row.getData().Id;
+                        var probs = $table.getSelectedRows();
+                        var probId = probs[0].getData().Id;
+                        // TODO: Call controller to add problem to list
+                    }
+                });
             });
         });
     </script>
