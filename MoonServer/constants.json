@@ -10,7 +10,7 @@
       "CSharpAttr": "Repeats",
       "JsonAttr": "Repeats",
       "Type": ">=",
-      "Categories": [ 1, 5, 20, 50, 100 ]
+      "Categories": [ 20, 50, 100, 500, 1000 ]
     },
     {
       "Name": "rating",
