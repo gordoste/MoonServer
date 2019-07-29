@@ -181,7 +181,7 @@
     <Compile Include="Models\Proxy\HoldProxy.cs" />
     <Compile Include="Models\Proxy\HoldSetupProxy.cs" />
     <Compile Include="Models\Proxy\PositionProxy.cs" />
-    <Compile Include="Models\Proxy\ProblemListProxy.cs" />
+    <Compile Include="Models\ProblemListViewModel.cs" />
     <Compile Include="Models\Proxy\ProblemProxy.cs" />
     <Compile Include="Models\Proxy\Proxy.cs" />
     <Compile Include="Models\Serialization.cs" />

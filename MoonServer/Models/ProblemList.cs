@@ -28,7 +28,7 @@
 
         public string PropertiesAsJson()
         {
-            return JSONSerializer.Serialize(new ProblemListProxy(this));
+            return JSONSerializer.Serialize(new ProblemListViewModel(this));
         }
     }
 }
