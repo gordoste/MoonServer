@@ -22,18 +22,24 @@ namespace MoonServer.Controllers
         public JsonResult<ProblemResponse> Post([FromBody] ProblemViewModel probVM)
         {
             Dictionary<string, string> filtVals = new Dictionary<string, string>();
+            // Map the JSON attribute to the CSharp properties - like a primitive ORM :)
             foreach (var f in Constants.Config.Filters)
             {
+                // Confusing, but we go from the instance up to the class, then identify which property we want,
+                // and request the value of that property for this instance!
                 string filtVal = (string)probVM.GetType().GetProperty(f.CSharpAttr).GetValue(probVM);
-                if (filtVal == null) { filtVal = Constants.GetString("AllFilterName"); }
+                if (filtVal == null) { filtVal = Constants.GetString("AllFilterName"); } // If not specified, get everything
                 filtVals.Add(f.Name, filtVal);
             }
+            // Build the filename that has the data we want
             List<string> filtParts = new List<string>();
             foreach (var pair in filtVals.OrderBy(p => p.Key))
             {
                 filtParts.Add(pair.Key + "_" + pair.Value);
             }
             string fname = Constants.GetFileConfig("CacheDir") + "\\" + string.Join("_", filtParts) + ".json";
+            // Read the file and return the contents (de-serialising and re-serialising is needed to check whether
+            // we are returning too many problems)
             if (!File.Exists(fname))
             {
                 return Json(new ProblemResponse { Status = HttpStatusCode.NotFound, Message = "Cannot find file." });
