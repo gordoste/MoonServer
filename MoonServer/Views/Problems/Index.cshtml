@@ -29,6 +29,7 @@
                     <label for="repeatsGrp">Repeats:</label>
                 </div>
                 <div id="repeatsGrp" class="filters btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary" data-filter="repeats:@Constants.GetString("GTEFirstCatName")">@("<" + Constants.GetFilter("repeats").Categories[0])</button>
                     @foreach (var r in Constants.GetFilter("repeats").Categories.ConvertAll(s => int.Parse(s)))
                     {
                         if (r > 0)
@@ -44,6 +45,7 @@
                     <label for="ratingGrp">Rating:</label>
                 </div>
                 <div id="ratingGrp" class="filters btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary" data-filter="rating:@Constants.GetString("GTEFirstCatName")">@("<" + Constants.GetFilter("rating").Categories[0])</button>
                     @foreach (var r in Constants.GetFilter("rating").Categories.ConvertAll(s => int.Parse(s)))
                     {
                         if (r > 0)
@@ -202,51 +204,14 @@
             }
         };
 
-        $('#datagetter').on('click tap', function () {
-            $listTable.deselectRow();
-            var preFilters = {};
-            $('.filters button.active').each(function (i, e) {
-                var filterParts = $(this).attr('data-filter').split(':');
-                if (filterParts[1] == "*") {
-                    preFilters[filterParts[0]] = "@Constants.GetString("AllFilterName")";
-                } else {
-                    preFilters[filterParts[0]] = filterParts[1];
-                }
+        $(document).ready(function () {
+            $('.btn-group button').on('click tap', function () {
+                $(this).siblings('button').removeClass('active');
+                $(this).addClass('active');
             });
-            $.ajax({
-                type: 'POST',
-                data: JSON.stringify(preFilters),
-                url: "/api/Problems",
-                contentType: 'application/json'
-            })
-                .done(function (data) {
-                    showProblems(data);
-                    // clear filters
-                    $('.filters button.active').each(function (i, e) {
-                        var elem = $(e);
-                        if (elem.hasClass('allfilter')) {
-                            elem.removeClass('btn-outline-primary').addClass('btn-outline-danger');
-                            elem.siblings().removeClass('btn-outline-primary').addClass('btn-outline-danger');
-                        }
-                        else {
-                            elem.siblings().attr('disabled', true);
-                        }
-                    });
-                    // set up handler for filter button click
-                    $('.filters .btn-outline-danger').on('click tap', function () {
-                        var filterParts = $(this).attr('data-filter').split(':');
-                        if (filterParts[1] == "*") {
-                            delete postFilters[filterParts[0]];
-                        } else {
-                            postFilters[filterParts[0]] = filterParts[1];
-                        }
-                        refreshFilters();
-                    });
-                    $('#datagetter').hide();
-                    $('#resetbtn').show();
-                });
 
             $('#resetbtn').on('click tap', function () {
+                $('#problems').attr('disabled', false);
                 $('.filters button')
                     .removeAttr('disabled')
                     .removeClass(['active', 'btn-outline-danger'])
@@ -256,14 +221,6 @@
                 $('#probcount').hide();
                 $('#datagetter').show();
                 $(this).hide();
-            });
-
-        });
-
-        $(document).ready(function () {
-            $('.btn-group button').on('click tap', function () {
-                $(this).siblings('button').removeClass('active');
-                $(this).addClass('active');
             });
 
             $listTable = new Tabulator("#lists", {
@@ -284,10 +241,16 @@
                 selectable: 1,
                 rowTap: function (e, row) { row.toggleSelect(); },
                 rowSelected: function (row) {
+                    $('#problems').attr('disabled', true);
                     $.ajax({
                         type: 'GET',
                         url: "/api/ProblemLists/Choose/" + row.getData().Id
-                    }).done(function (data) { showProblems(data); });
+                    })
+                        .done(function (data) {
+                            $('#problems').attr('disabled', false);
+                            showProblems(data);
+                        }
+                    );
                 }
             });
 
@@ -317,6 +280,54 @@
                         // TODO: Call controller to add problem to list
                     }
                 });
+            });
+
+            $('#datagetter').on('click tap', function () {
+                $listTable.deselectRow();
+                $('#problems').attr('disabled', true);
+                var preFilters = {};
+                $('.filters button.active').each(function (i, e) {
+                    var filterParts = $(this).attr('data-filter').split(':');
+                    if (filterParts[1] == "*") {
+                        preFilters[filterParts[0]] = "@Constants.GetString("AllFilterName")";
+                    } else {
+                        preFilters[filterParts[0]] = filterParts[1];
+                    }
+                });
+                $.ajax({
+                    type: 'POST',
+                    data: JSON.stringify(preFilters),
+                    url: "/api/Problems",
+                    contentType: 'application/json'
+                })
+                    .done(function (data) {
+                        showProblems(data);
+                        if (data['Status'] != 200) return;
+                        // set up buttons for further filtering
+                        $('.filters button.active').each(function (i, e) {
+                            var elem = $(e);
+                            if (elem.hasClass('allfilter')) {
+                                elem.removeClass('btn-outline-primary').addClass('btn-outline-danger');
+                                elem.siblings().removeClass('btn-outline-primary').addClass('btn-outline-danger');
+                            }
+                            else {
+                                elem.siblings().attr('disabled', true);
+                            }
+                        });
+                        // set up handler for further filtering
+                        $('.filters .btn-outline-danger').on('click tap', function () {
+                            var filterParts = $(this).attr('data-filter').split(':');
+                            if (filterParts[1] == "*") {
+                                delete postFilters[filterParts[0]];
+                            } else {
+                                postFilters[filterParts[0]] = filterParts[1];
+                            }
+                            refreshFilters();
+                        });
+                        $('#datagetter').hide();
+                        $('#resetbtn').show();
+                        $('#problems').attr('disabled', false);
+                    });
             });
         });
     </script>

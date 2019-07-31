@@ -1,7 +1,8 @@
 {
   "Strings": {
     "AllFilterName": "X",
-    "MaxProblemsReturned": 1500,
+    "GTEFirstCatName": "FC",
+    "MaxProblemsReturned": 2500,
     "TooManyProblemsCode": "TOO_MANY_PROBLEMS"
   },
   "Filters": [
@@ -10,7 +11,7 @@
       "CSharpAttr": "Repeats",
       "JsonAttr": "Repeats",
       "Type": ">=",
-      "Categories": [ 20, 50, 100, 500, 1000 ]
+      "Categories": [ 5, 20, 100, 500 ]
     },
     {
       "Name": "rating",
