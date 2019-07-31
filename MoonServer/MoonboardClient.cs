@@ -72,9 +72,31 @@ namespace MoonServer
                 Log.WriteLine(string.Format("Sending command '{0}'", cmd));
                 int totalBytesSent = 0;
                 byte[] sendBuffer = Encoding.ASCII.GetBytes(cmd + "\r\n");
-                while (totalBytesSent < sendBuffer.Length)
+                try
                 {
-                    totalBytesSent += clientSock.Send(sendBuffer, totalBytesSent, sendBuffer.Length - totalBytesSent, SocketFlags.None);
+                    while (totalBytesSent < sendBuffer.Length)
+                    {
+                        totalBytesSent += clientSock.Send(sendBuffer, totalBytesSent, sendBuffer.Length - totalBytesSent, SocketFlags.None);
+                    }
+                }
+                catch (SocketException se)
+                {
+                    if (se.SocketErrorCode == SocketError.TimedOut)
+                    {
+                        throw new MoonboardClientException("SendCommand(): Timed out");
+                    }
+                    if (se.SocketErrorCode == SocketError.NotConnected)
+                    {
+                        throw new MoonboardClientException("SendCommand(): Socket not connected");
+                    }
+                    if (se.SocketErrorCode == SocketError.ConnectionAborted)
+                    {
+                        throw new MoonboardClientException("SendCommand(): Connection aborted");
+                    }
+                    if (se.SocketErrorCode == SocketError.Interrupted)
+                    {
+                        throw new MoonboardClientException("SendCommand(): Command interrupted");
+                    }
                 }
                 WaitForAck(CmdId);
                 CmdId++;
