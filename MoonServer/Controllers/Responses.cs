@@ -4,19 +4,15 @@ using System.Net;
 
 namespace MoonServer.Controllers
 {
-    public class ProblemResponse
+    public class Response
     {
-        public IEnumerable<ProblemProxy> Problems;
         public HttpStatusCode Status;
         public string SubStatus;
         public string Message;
     }
 
-    public class ChooseResponse
+    public class ProblemResponse : Response
     {
-        public HttpStatusCode Status;
-        public string SubStatus;
-        public string Message;
-        public int Id;
+        public IEnumerable<ProblemProxy> Problems;
     }
 }

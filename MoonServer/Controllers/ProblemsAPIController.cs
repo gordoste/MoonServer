@@ -53,16 +53,16 @@ namespace MoonServer.Controllers
 
         [HttpGet]
         [Route("api/Problems/Choose/{id}")]
-        public JsonResult<ChooseResponse> Choose(int id)
+        public JsonResult<Response> Choose(int id)
         {
             try
             {
                 moonboardClient.ShowProblem(id);
-                return Json(new ChooseResponse { Status = HttpStatusCode.OK, Id = id });
+                return Json(new Response { Status = HttpStatusCode.OK });
             }
             catch (MoonboardClientException mbe)
             {
-                return Json(new ChooseResponse
+                return Json(new Response
                 {
                     Status = HttpStatusCode.InternalServerError,
                     Message = mbe.Message
