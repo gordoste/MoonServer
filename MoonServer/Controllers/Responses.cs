@@ -1,4 +1,5 @@
-﻿using MoonServer.Models.Proxy;
+﻿using MoonServer.Models;
+using MoonServer.Models.Proxy;
 using System.Collections.Generic;
 using System.Net;
 
@@ -14,5 +15,10 @@ namespace MoonServer.Controllers
     public class ProblemResponse : Response
     {
         public IEnumerable<ProblemProxy> Problems;
+    }
+
+    public class ProblemListResponse : Response
+    {
+        public IEnumerable<ProblemListViewModel> ProblemLists;
     }
 }
