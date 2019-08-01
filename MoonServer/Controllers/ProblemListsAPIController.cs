@@ -13,6 +13,18 @@ namespace MoonServer.Controllers
         private static readonly MoonServerDB db = new MoonServerDB();
 
         [HttpGet]
+        [Route("api/ProblemLists/Get")]
+        public JsonResult<ProblemListResponse> Get()
+        {
+            List<ProblemListViewModel> plList = new List<ProblemListViewModel>();
+            foreach (ProblemList pl in db.ProblemLists)
+            {
+                plList.Add(new ProblemListViewModel { Id = pl.Id, Name = pl.Name, Count = pl.ProblemListEntries.Count });
+            }
+            return Json(new ProblemListResponse { Status = HttpStatusCode.OK, ProblemLists = plList });
+        }
+
+        [HttpGet]
         [Route("api/ProblemLists/Choose/{id}")]
         public JsonResult<ProblemResponse> Choose(int id)
         {
