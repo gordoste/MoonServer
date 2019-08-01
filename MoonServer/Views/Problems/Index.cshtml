@@ -7,7 +7,6 @@
 }
 
 <link href="~/lib/tabulator/css/tabulator.min.css" rel="stylesheet" />
-<link href="~/lib/jquery-modal/jquery.modal.min.css" rel="stylesheet" />
 
 <div class="container">
     <div class="row">
@@ -78,30 +77,85 @@
 
         <div class="col-4">
             <div class="row" id="lists"></div>
-            <div class="row" id="addDiv"><button type="button" id="addBtn" class="btn btn-primary disabled">Add This Problem</button></div>
+            <div class="row" id="listBtnDiv">
+                <div class="col-4">
+                    <button type="button" id="addBtn" class="btn btn-primary disabled" data-toggle="modal" data-target="#addListsModal">Add This Problem</button>
+                </div>
+                <div class="col-4">
+                    <button type="button" id="removeBtn" class="btn btn-primary disabled">Remove This Problem</button>
+                </div>
+            </div>
         </div>
     </div>
 
 
     <div class="row w-100" id="problems"></div>
-    <div id="addLists" class="modal"><div id="addListsTbl"></div><a href="#" rel="modal:close">Close</a></div>
-
-    @{ int i = 0; }
-    <text id="list-data" hidden>
-        @(++i > 1 ? "," : "" )
-        @foreach (var item in Model)
-        {
-            @Html.Raw(item.PropertiesAsJson());
-        }
-    </text>
+    <div class="modal fade" id="addListsModal" tabindex="-1" role="dialog" aria-labelledby="addListsModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addListsModalTitle">Select List</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body"><div id="addListsTbl"></div></div>
+            </div>
+        </div>
+    </div>
+    
 </div>
 @section scripts {
     <script type="text/javascript" src="~/lib/tabulator/js/tabulator.min.js"></script>
-    <script type="text/javascript" src="~/lib/jquery-modal/jquery.modal.min.js"></script>
 
     <script language="javascript">
         $('#probcount').hide();
         $('#resetbtn').hide();
+
+        function resetFilters() {
+            $('.filters button')
+                .removeAttr('disabled')
+                .removeClass(['active', 'btn-outline-danger'])
+                .addClass('btn-outline-primary');
+            $('.filters').off('click tap', 'btn-outline-primary');
+            $('button.allfilter').addClass('active');
+            $('#probcount').hide();
+        }
+
+        function refreshProblemLists() {
+            $listTable = new Tabulator("#lists", {
+                ajaxURL: "/api/ProblemLists/Get", //ajax URL
+                ajaxConfig: "get", //ajax HTTP request type
+                ajaxResponse: function (url, params, response) { return response['ProblemLists']; },
+                layout: "fitData",         //fit columns to width of data
+                layoutColumnsOnNewData: true,
+                tooltips: true,            //show tool tips on cells
+                movableColumns: false,     //allow column order to be changed
+                resizableRows: false,      //allow row order to be changed
+                initialSort: [             //set the initial sort order of the data
+                    { column: "Name", dir: "asc" },
+                ],
+                columns: [                 //define the table columns
+                    { title: "Name", field: "Name" },
+                    { title: "Count", field: "Count" },
+                    { title: "Id", field: "Id", visible: false }
+                ],
+                selectable: 1,
+                rowTap: function (e, row) { row.toggleSelect(); },
+                rowSelected: function (row) {
+                    $('#problems').attr('disabled', true);
+                    $.ajax({
+                        type: 'GET',
+                        url: "/api/ProblemLists/Choose/" + row.getData().Id
+                    })
+                        .done(function (data) {
+                            showProblems(data);
+                            problemSourceChanged(PROBLEM_SOURCE.LIST);
+                            $('#problems').attr('disabled', false);
+                        });
+                }
+            });
+        }
 
         var postFilters = {}; // No filters at the start
         var refreshFilters = function () {
@@ -129,6 +183,28 @@
         var $table;
         var $listTable;
         var $addListTable;
+        // state possibilities
+        const PROBLEM_SOURCE = { NONE: 0, FILTER: 1, LIST: 2 }; // Where we are getting problems from
+        // initial state
+        var $problemSource = PROBLEM_SOURCE.NONE;
+
+        function problemSourceChanged(newSource) {
+            if (newSource == $problemSource) { return; }
+            if (newSource == PROBLEM_SOURCE.FILTER) {
+                $('#datagetter').hide();
+                $('#resetbtn').show();
+                $('#addBtn').addClass('disabled');
+                $('#removeBtn').addClass('disabled');
+            }
+            if (newSource == PROBLEM_SOURCE.LIST) {
+                $('#datagetter').show();
+                $('#resetbtn').hide();
+                resetFilters();
+                $('#addBtn').addClass('disabled');
+                $('#removeBtn').addClass('disabled');
+            }
+            $problemSource = newSource;
+        }
 
         // Set up a trigger on key press which will apply filter after 1 second
         // Timer restarts if another key press occurs
@@ -174,18 +250,17 @@
                             url: "/api/Problems/Choose/" + row.getData().Id
                         })
                         .done(function (data) {
-                            if (data['Status'] != 200) {
-                                if (!data['Message']) { data['Message'] = 'Unknown'; }
+                            if (data['Message'].length > 0) {
                                 alert("HTTP code " + data['Status'] + ": " + data['Message']);
                             }
                         });
                     },
                     rowSelectionChanged: function (data, rows) {
                         if (data.length == 0) {
-                            $('#addBtn').addClass('disabled');
+                            $('#listBtnDiv button').addClass('disabled');
                         }
                         else {
-                            $('#addBtn').removeClass('disabled');
+                            $('#listBtnDiv button').removeClass('disabled');
                         }
                     }
 
@@ -212,75 +287,51 @@
 
             $('#resetbtn').on('click tap', function () {
                 $('#problems').attr('disabled', false);
-                $('.filters button')
-                    .removeAttr('disabled')
-                    .removeClass(['active', 'btn-outline-danger'])
-                    .addClass('btn-outline-primary');
-                $('.filters').off('click tap', 'btn-outline-primary');
-                $('button.allfilter').addClass('active');
-                $('#probcount').hide();
+                resetFilters();
                 $('#datagetter').show();
                 $(this).hide();
             });
 
-            $listTable = new Tabulator("#lists", {
-                data: eval('[' + $('#list-data').text().trim() + ']'),            //load row data from array
-                layout: "fitData",         //fit columns to width of data
-                layoutColumnsOnNewData: true,
-                tooltips: true,            //show tool tips on cells
-                movableColumns: false,     //allow column order to be changed
-                resizableRows: false,      //allow row order to be changed
-                initialSort: [             //set the initial sort order of the data
-                    { column: "Name", dir: "asc" },
-                ],
-                columns: [                 //define the table columns
-                    { title: "Name", field: "Name" },
-                    { title: "Count", field: "Count" },
-                    { title: "Id", field: "Id", visible: false }
-                ],
-                selectable: 1,
-                rowTap: function (e, row) { row.toggleSelect(); },
-                rowSelected: function (row) {
-                    $('#problems').attr('disabled', true);
-                    $.ajax({
-                        type: 'GET',
-                        url: "/api/ProblemLists/Choose/" + row.getData().Id
-                    })
-                        .done(function (data) {
-                            $('#problems').attr('disabled', false);
-                            showProblems(data);
-                        }
-                    );
-                }
-            });
-
             $('#addBtn').on('click tap', function () {
-                $('#addLists').modal();
-                $addListTable = new Tabulator("#addListsTbl", {
-                    data: eval('[' + $('#list-data').text().trim() + ']'),            //load row data from array
-                    layout: "fitData",         //fit columns to width of data
-                    layoutColumnsOnNewData: true,
-                    tooltips: true,            //show tool tips on cells
-                    movableColumns: false,     //allow column order to be changed
-                    resizableRows: false,      //allow row order to be changed
-                    initialSort: [             //set the initial sort order of the data
-                        { column: "Name", dir: "asc" },
-                    ],
-                    columns: [                 //define the table columns
-                        { title: "Name", field: "Name" },
-                        { title: "Count", field: "Count" },
-                        { title: "Id", field: "Id", visible: false }
-                    ],
-                    selectable: 1,
-                    rowTap: function (e, row) { row.toggleSelect(); },
-                    rowSelected: function (row) {
-                        var listId = row.getData().Id;
-                        var probs = $table.getSelectedRows();
-                        var probId = probs[0].getData().Id;
-                        // TODO: Call controller to add problem to list
-                    }
+                $('#addListsModal').modal().on('shown.bs.modal', function(event) {
+                    $addListTable = new Tabulator("#addListsTbl", {
+                        ajaxURL: "/api/ProblemLists/Get", //ajax URL
+                        ajaxConfig: "get", //ajax HTTP request type
+                        ajaxResponse: function (url, params, response) { return response['ProblemLists']; },
+                        layout: "fitData",         //fit columns to width of data
+                        layoutColumnsOnNewData: true,
+                        tooltips: true,            //show tool tips on cells
+                        movableColumns: false,     //allow column order to be changed
+                        resizableRows: false,      //allow row order to be changed
+                        initialSort: [             //set the initial sort order of the data
+                            { column: "Name", dir: "asc" },
+                        ],
+                        columns: [                 //define the table columns
+                            { title: "Name", field: "Name" },
+                            { title: "Count", field: "Count" },
+                            { title: "Id", field: "Id", visible: false }
+                        ],
+                        selectable: 1,
+                        rowTap: function (e, row) { row.toggleSelect(); },
+                        rowSelected: function (row) {
+                            var listId = row.getData().Id;
+                            var probs = $table.getSelectedRows();
+                            var probId = probs[0].getData().Id;
+                            $.ajax({
+                                type: 'GET',
+                                url: "/api/ProblemLists/" + listId + "/AddProblem/" + probId
+                            })
+                                .done(function (data) {
+                                    if (data['Message'].length > 0) { alert(data['Message']); }
+                                    $('#addListsModal').modal('hide');
+                                    refreshProblemLists();
+                                });
+                        }
+                    });
                 });
             });
+
+            refreshProblemLists();
 
             $('#datagetter').on('click tap', function () {
                 $listTable.deselectRow();
@@ -324,8 +375,7 @@
                             }
                             refreshFilters();
                         });
-                        $('#datagetter').hide();
-                        $('#resetbtn').show();
+                        problemSourceChanged(PROBLEM_SOURCE.FILTER);
                         $('#problems').attr('disabled', false);
                     });
             });
