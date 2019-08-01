@@ -79,10 +79,10 @@
             <div class="row" id="lists"></div>
             <div class="row" id="listBtnDiv">
                 <div class="col-4">
-                    <button type="button" id="addBtn" class="btn btn-primary disabled" data-toggle="modal" data-target="#addListsModal">Add This Problem</button>
+                    <button type="button" id="addBtn" class="btn btn-primary disabled" data-toggle="modal" data-target="#addListsModal">Add</button>
                 </div>
                 <div class="col-4">
-                    <button type="button" id="removeBtn" class="btn btn-primary disabled">Remove This Problem</button>
+                    <button type="button" id="removeBtn" class="btn btn-primary disabled">Remove</button>
                 </div>
             </div>
         </div>
@@ -329,6 +329,20 @@
                         }
                     });
                 });
+            });
+            $('#removeBtn').on('click tap', function () {
+                var lists = $listTable.getSelectedRows();
+                var listId = lists[0].getData().Id;
+                var probs = $table.getSelectedRows();
+                var probId = probs[0].getData().Id;
+                $.ajax({
+                    type: 'GET',
+                    url: "/api/ProblemLists/" + listId + "/RemoveProblem/" + probId
+                })
+                    .done(function (data) {
+                        if (data['Message'].length > 0) { alert(data['Message']); }
+                        refreshProblemLists();
+                    });
             });
 
             refreshProblemLists();
