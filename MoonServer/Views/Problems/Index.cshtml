@@ -190,6 +190,13 @@
 
         function problemSourceChanged(newSource) {
             if (newSource == $problemSource) { return; }
+            if (newSource == PROBLEM_SOURCE.NONE) {
+                $('#datagetter').show();
+                $('#resetbtn').hide();
+                resetFilters();
+                $('#addBtn').addClass('disabled');
+                $('#removeBtn').addClass('disabled');
+            }
             if (newSource == PROBLEM_SOURCE.FILTER) {
                 $('#datagetter').hide();
                 $('#resetbtn').show();
@@ -260,7 +267,14 @@
                             $('#listBtnDiv button').addClass('disabled');
                         }
                         else {
-                            $('#listBtnDiv button').removeClass('disabled');
+                            if ($problemSource == PROBLEM_SOURCE.LIST) {
+                                $('#addBtn').addClass('disabled');
+                                $('#removeBtn').removeClass('disabled');
+                            }
+                            else {
+                                $('#addBtn').removeClass('disabled');
+                                $('#removeBtn').addClass('disabled');
+                            }
                         }
                     }
 
@@ -287,9 +301,7 @@
 
             $('#resetbtn').on('click tap', function () {
                 $('#problems').attr('disabled', false);
-                resetFilters();
-                $('#datagetter').show();
-                $(this).hide();
+                problemSourceChanged(PROBLEM_SOURCE.NONE);
             });
 
             $('#addBtn').on('click tap', function () {
