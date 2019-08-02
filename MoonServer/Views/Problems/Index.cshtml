@@ -10,7 +10,7 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-8" id="filterDiv">
+        <div class="col-7" id="filterDiv">
             <div class="row">
                 <div class="col-3">
                     <label for="gradeGrp">Grade:</label>
@@ -69,27 +69,31 @@
                     <div class="input-group-prepend"><span class="input-group-text">Name</span></div>
                     <input type="text" class="form-control" maxlength="20" id="namefilter" />
                 </div>
-                <button type="button" id="datagetter" class="col-3 btn btn-primary">Get Data</button>
-                <button type="button" id="resetbtn" class="col-3 btn btn-primary hide">Reset</button>
-                <div id="probcount" class="h2 col-4"></div>
+                <button type="button" id="datagetter" class="col-3 btn-sm btn-primary">Get Data</button>
+                <button type="button" id="resetbtn" class="col-3 btn-sm btn-primary hide">Reset</button>
             </div>
         </div>
 
-        <div class="col-4">
+        <div class="col-5">
             <div class="row" id="lists"></div>
             <div class="row" id="listBtnDiv">
-                <div class="col-4">
-                    <button type="button" id="addBtn" class="btn btn-primary disabled" data-toggle="modal" data-target="#addListsModal">Add Problem</button>
+                <div class="col-5">
+                    <button type="button" id="addBtn" class="btn-sm btn-primary disabled" data-toggle="modal" data-target="#addListsModal">Add Problem</button>
                 </div>
-                <div class="col-4">
-                    <button type="button" id="removeBtn" class="btn btn-primary disabled">Remove Problem</button>
+                <div class="col-7">
+                    <button type="button" id="removeBtn" class="btn-sm btn-primary disabled">Remove Problem</button>
                 </div>
             </div>
         </div>
     </div>
 
 
-    <div class="row w-100" id="problems"></div>
+    <div class="row">
+        <div class="col-8" id="problems"></div>
+        <div class="col-4" id="options">
+            <div id="probcount" class="row h2 justify-content-end"></div>
+        </div>
+    </div>
     <div class="modal fade" id="addListsModal" tabindex="-1" role="dialog" aria-labelledby="addListsModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -109,17 +113,29 @@
     <script type="text/javascript" src="~/lib/tabulator/js/tabulator.min.js"></script>
 
     <script language="javascript">
-        $('#probcount').hide();
         $('#resetbtn').hide();
 
         function resetFilters() {
             $('.filters button')
                 .removeAttr('disabled')
                 .removeClass(['active', 'btn-outline-danger'])
-                .addClass('btn-outline-primary');
-            $('.filters').off('click tap', 'btn-outline-primary');
+                .addClass('btn-outline-primary')
+                .off('click tap');
+            $('.btn-group button').on('click tap', function () {
+                $(this).siblings('button').removeClass('active');
+                $(this).addClass('active');
+            });
             $('button.allfilter').addClass('active');
-            $('#probcount').hide();
+        }
+
+        function updateProblemCount(data) {
+            var num = data.length;
+            if (num == 0) { $('#probcount').hide(); }
+            $('#probcount').text(num + " problem" + (num > 0 ? 's' : '')).show();
+        }
+
+        function updateProblemCountOnFilter(filters, rows) {
+            updateProblemCount(rows);
         }
 
         function refreshProblemLists() {
@@ -168,7 +184,6 @@
                 _filters.push({ field: 'IsBenchmark', type: '=', value: true });
             }
             $table.setFilter(_filters);
-            $('#probcount').text($table.getDataCount()).show();
         };
 
         // tables
@@ -262,12 +277,14 @@
                             type: 'GET',
                             url: "/api/Problems/Choose/" + row.getData().Id
                         })
-                        .done(function (data) {
-                            if (data['Message'].length > 0) {
-                                alert("HTTP code " + data['Status'] + ": " + data['Message']);
-                            }
-                        });
+                            .done(function (data) {
+                                if (data['Message'].length > 0) {
+                                    alert("HTTP code " + data['Status'] + ": " + data['Message']);
+                                }
+                            });
                     },
+                    dataLoaded: updateProblemCount,
+                    dataFiltered: updateProblemCountOnFilter,
                     rowSelectionChanged: function (data, rows) {
                         if (data.length == 0) {
                             $('#listBtnDiv button').addClass('disabled');
@@ -285,8 +302,6 @@
                     }
 
                 });
-
-                $('#probcount').text($table.getDataCount()).show();
             }
             else {
                 if (!data['Message']) { data['Message'] = 'Unknown'; }
@@ -300,10 +315,7 @@
         };
 
         $(document).ready(function () {
-            $('.btn-group button').on('click tap', function () {
-                $(this).siblings('button').removeClass('active');
-                $(this).addClass('active');
-            });
+            resetFilters();
 
             $('#resetbtn').on('click tap', function () {
                 $('#problems').attr('disabled', false);
