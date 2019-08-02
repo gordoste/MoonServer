@@ -79,10 +79,10 @@
             <div class="row" id="lists"></div>
             <div class="row" id="listBtnDiv">
                 <div class="col-4">
-                    <button type="button" id="addBtn" class="btn btn-primary disabled" data-toggle="modal" data-target="#addListsModal">Add</button>
+                    <button type="button" id="addBtn" class="btn btn-primary disabled" data-toggle="modal" data-target="#addListsModal">Add Problem</button>
                 </div>
                 <div class="col-4">
-                    <button type="button" id="removeBtn" class="btn btn-primary disabled">Remove</button>
+                    <button type="button" id="removeBtn" class="btn btn-primary disabled">Remove Problem</button>
                 </div>
             </div>
         </div>
@@ -144,15 +144,7 @@
                 rowTap: function (e, row) { row.toggleSelect(); },
                 rowSelected: function (row) {
                     $('#problems').attr('disabled', true);
-                    $.ajax({
-                        type: 'GET',
-                        url: "/api/ProblemLists/Choose/" + row.getData().Id
-                    })
-                        .done(function (data) {
-                            showProblems(data);
-                            problemSourceChanged(PROBLEM_SOURCE.LIST);
-                            $('#problems').attr('disabled', false);
-                        });
+                    loadProblemsFromList(row.getData().Id);
                 }
             });
         }
@@ -183,6 +175,7 @@
         var $table;
         var $listTable;
         var $addListTable;
+        var $listSelected;
         // state possibilities
         const PROBLEM_SOURCE = { NONE: 0, FILTER: 1, LIST: 2 }; // Where we are getting problems from
         // initial state
@@ -211,6 +204,19 @@
                 $('#removeBtn').addClass('disabled');
             }
             $problemSource = newSource;
+        }
+
+        function loadProblemsFromList(listId) {
+            $listSelected = listId;
+            $.ajax({
+                type: 'GET',
+                url: "/api/ProblemLists/Choose/" + listId
+            })
+                .done(function (data) {
+                    showProblems(data);
+                    problemSourceChanged(PROBLEM_SOURCE.LIST);
+                    $('#problems').attr('disabled', false);
+                });
         }
 
         // Set up a trigger on key press which will apply filter after 1 second
@@ -354,6 +360,10 @@
                     .done(function (data) {
                         if (data['Message'].length > 0) { alert(data['Message']); }
                         refreshProblemLists();
+                        $listTable.options.dataLoaded = function () {
+                            $listTable.searchRows("Id", "=", $listSelected)[0].select();
+                            $listTable.options.dataLoaded = null;
+                        };
                     });
             });
 
