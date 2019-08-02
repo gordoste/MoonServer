@@ -415,6 +415,14 @@
     <Content Include="Content\jquery.mobile.theme-1.4.5.min.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="lib\bootstrap-toggle\css\bootstrap-toggle.css" />
+    <Content Include="lib\bootstrap-toggle\css\bootstrap-toggle.min.css" />
+    <Content Include="lib\bootstrap-toggle\css\bootstrap2-toggle.css" />
+    <Content Include="lib\bootstrap-toggle\css\bootstrap2-toggle.min.css" />
+    <Content Include="lib\bootstrap-toggle\js\bootstrap-toggle.js" />
+    <Content Include="lib\bootstrap-toggle\js\bootstrap-toggle.min.js" />
+    <Content Include="lib\bootstrap-toggle\js\bootstrap2-toggle.js" />
+    <Content Include="lib\bootstrap-toggle\js\bootstrap2-toggle.min.js" />
     <Content Include="lib\tabulator\css\bootstrap\tabulator_bootstrap.css" />
     <Content Include="lib\tabulator\css\bootstrap\tabulator_bootstrap.min.css" />
     <Content Include="lib\tabulator\css\bootstrap\tabulator_bootstrap4.css" />
@@ -531,6 +539,8 @@
     <Content Include="lib\tabulator\css\tabulator.min.css.map" />
     <Content Include="lib\tabulator\css\tabulator_simple.min.css.map" />
     <Content Include="lib\tabulator\css\tabulator_site.min.css.map" />
+    <Content Include="lib\bootstrap-toggle\js\bootstrap-toggle.min.js.map" />
+    <Content Include="lib\bootstrap-toggle\js\bootstrap2-toggle.min.js.map" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
     <Content Include="Scripts\jquery-3.4.1.min.js" />
