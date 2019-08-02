@@ -7,6 +7,7 @@
 }
 
 <link href="~/lib/tabulator/css/tabulator.min.css" rel="stylesheet" />
+<link href="~/lib/bootstrap-toggle/css/bootstrap-toggle.min.css" rel="stylesheet" />
 
 <div class="container">
     <div class="row">
@@ -91,7 +92,11 @@
     <div class="row">
         <div class="col-8" id="problems"></div>
         <div class="col-4" id="options">
-            <div id="probcount" class="row h2 justify-content-end"></div>
+            <div id="probcount" class="h2 justify-content-end"></div>
+            <div class="row w-100">
+                <div class="col-8">Send commands</div>
+                <div class="col-4"><input id="mbToggle" type="checkbox" checked data-toggle="toggle"></div>
+            </div>
         </div>
     </div>
     <div class="modal fade" id="addListsModal" tabindex="-1" role="dialog" aria-labelledby="addListsModalTitle" aria-hidden="true">
@@ -107,10 +112,11 @@
             </div>
         </div>
     </div>
-    
+
 </div>
 @section scripts {
     <script type="text/javascript" src="~/lib/tabulator/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="~/lib/bootstrap-toggle/js/bootstrap-toggle.min.js"></script>
 
     <script language="javascript">
         $('#resetbtn').hide();
@@ -273,6 +279,9 @@
                     selectable: 1,
                     rowTap: function (e, row) { row.toggleSelect(); },
                     rowSelected: function (row) {
+                        if (!$('#mbToggle').prop('checked')) {
+                            return;
+                        }
                         $.ajax({
                             type: 'GET',
                             url: "/api/Problems/Choose/" + row.getData().Id
