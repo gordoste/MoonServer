@@ -70,8 +70,8 @@
                     <div class="input-group-prepend"><span class="input-group-text">Name</span></div>
                     <input type="text" class="form-control" maxlength="20" id="namefilter" />
                 </div>
-                <button type="button" id="datagetter" class="col-3 btn-sm btn-primary">Get Data</button>
-                <button type="button" id="resetbtn" class="col-3 btn-sm btn-primary hide">Reset</button>
+                <button type="button" id="datagetter" class="col-3 btn btn-sm btn-primary">Get Data</button>
+                <button type="button" id="resetbtn" class="col-3 btn btn-sm btn-primary hide">Reset</button>
             </div>
         </div>
 
@@ -79,10 +79,10 @@
             <div class="row" id="lists"></div>
             <div class="row" id="listBtnDiv">
                 <div class="col-5">
-                    <button type="button" id="addBtn" class="btn-sm btn-primary disabled" data-toggle="modal" data-target="#addListsModal">Add Problem</button>
+                    <button type="button" id="addListBtn" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addListModal">Add</button>
                 </div>
                 <div class="col-7">
-                    <button type="button" id="removeBtn" class="btn-sm btn-primary disabled">Remove Problem</button>
+                    <button type="button" id="delListBtn" class="btn btn-sm btn-primary" disabled>Delete</button>
                 </div>
             </div>
         </div>
@@ -93,22 +93,48 @@
         <div class="col-8" id="problems"></div>
         <div class="col-4" id="options">
             <div id="probcount" class="h2 justify-content-end"></div>
+            <div class="row" id="probBtnDiv">
+                <div>
+                    <button type="button" id="addBtn" class="btn btn-sm btn-primary" disabled data-toggle="modal" data-target="#addProbModal">Add To A List</button>
+                </div>
+                <div>
+                    <button type="button" id="removeBtn" class="btn btn-sm btn-primary" disabled>Remove From This List</button>
+                </div>
+            </div>
             <div class="row w-100">
                 <div class="col-8">Send commands</div>
                 <div class="col-4"><input id="mbToggle" type="checkbox" checked data-toggle="toggle"></div>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="addListsModal" tabindex="-1" role="dialog" aria-labelledby="addListsModalTitle" aria-hidden="true">
+    <div class="modal fade" id="addProbModal" tabindex="-1" role="dialog" aria-labelledby="addProbModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addListsModalTitle">Select List</h5>
+                    <h5 class="modal-title" id="addProbModalTitle">Select List</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body"><div id="addListsTbl"></div></div>
+                <div class="modal-body"><div id="addProbTbl"></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addListModal" tabindex="-1" role="dialog" aria-labelledby="addListModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">Name</span></div>
+                        <input type="text" class="form-control" maxlength="20" id="listNameTxt" />
+                        <button type="button" id="addListConfirmBtn" class="btn btn-sm btn-primary">OK</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -159,7 +185,7 @@
                 ],
                 columns: [                 //define the table columns
                     { title: "Name", field: "Name" },
-                    { title: "Count", field: "Count" },
+                    { title: "Problems", field: "Count" },
                     { title: "Id", field: "Id", visible: false }
                 ],
                 selectable: 1,
@@ -208,21 +234,24 @@
                 $('#datagetter').show();
                 $('#resetbtn').hide();
                 resetFilters();
-                $('#addBtn').addClass('disabled');
-                $('#removeBtn').addClass('disabled');
+                $('#addBtn').attr('disabled', true);
+                $('#removeBtn').attr('disabled', true);
+                $('#delListBtn').attr('disabled', true);
             }
             if (newSource == PROBLEM_SOURCE.FILTER) {
                 $('#datagetter').hide();
                 $('#resetbtn').show();
-                $('#addBtn').addClass('disabled');
-                $('#removeBtn').addClass('disabled');
+                $('#addBtn').attr('disabled', true);
+                $('#removeBtn').attr('disabled', true);
+                $('#delListBtn').attr('disabled', true);
             }
             if (newSource == PROBLEM_SOURCE.LIST) {
                 $('#datagetter').show();
                 $('#resetbtn').hide();
                 resetFilters();
-                $('#addBtn').addClass('disabled');
-                $('#removeBtn').addClass('disabled');
+                $('#addBtn').attr('disabled', true);
+                $('#removeBtn').attr('disabled', true);
+                $('#delListBtn').attr('disabled', false);
             }
             $problemSource = newSource;
         }
@@ -296,16 +325,16 @@
                     dataFiltered: updateProblemCountOnFilter,
                     rowSelectionChanged: function (data, rows) {
                         if (data.length == 0) {
-                            $('#listBtnDiv button').addClass('disabled');
+                            $('#probBtnDiv button').attr('disabled',true);
                         }
                         else {
                             if ($problemSource == PROBLEM_SOURCE.LIST) {
-                                $('#addBtn').addClass('disabled');
-                                $('#removeBtn').removeClass('disabled');
+                                $('#addBtn').attr('disabled',true);
+                                $('#removeBtn').attr('disabled',false);
                             }
                             else {
-                                $('#addBtn').removeClass('disabled');
-                                $('#removeBtn').addClass('disabled');
+                                $('#addBtn').attr('disabled',false);
+                                $('#removeBtn').attr('disabled',true);
                             }
                         }
                     }
@@ -333,7 +362,7 @@
 
             $('#addBtn').on('click tap', function () {
                 $('#addListsModal').modal().on('shown.bs.modal', function(event) {
-                    $addListTable = new Tabulator("#addListsTbl", {
+                    $addListTable = new Tabulator("#addProbTbl", {
                         ajaxURL: "/api/ProblemLists/Get", //ajax URL
                         ajaxConfig: "get", //ajax HTTP request type
                         ajaxResponse: function (url, params, response) { return response['ProblemLists']; },
@@ -385,6 +414,30 @@
                             $listTable.searchRows("Id", "=", $listSelected)[0].select();
                             $listTable.options.dataLoaded = null;
                         };
+                    });
+            });
+            $('#addListConfirmBtn').on('click tap', function () {
+                var listName = $('#listNameTxt').val();
+                $.ajax({
+                    type: 'POST',
+                    url: "/api/ProblemLists/Add",
+                    data: '"' + listName + '"',
+                    contentType: 'application/json'
+                })
+                    .done(function (data) {
+                        $('#addListModal').modal('hide');
+                        refreshProblemLists();
+                    });
+            });
+            $('#delListBtn').on('click tap', function () {
+                var lists = $listTable.getSelectedRows();
+                var listId = lists[0].getData().Id;
+                $.ajax({
+                    type: 'GET',
+                    url: "/api/ProblemLists/Remove/" + listId
+                })
+                    .done(function (data) {
+                        refreshProblemLists();
                     });
             });
 
