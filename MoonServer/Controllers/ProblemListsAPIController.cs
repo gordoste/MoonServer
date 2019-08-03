@@ -73,5 +73,31 @@ namespace MoonServer.Controllers
 
             return Json(new Response { Status = HttpStatusCode.OK, Message = "Removed" });
         }
+
+        // Add a problem list
+        [HttpPost]
+        [Route("api/ProblemLists/Add")]
+        public JsonResult<Response> Add([FromBody] string name)
+        {
+            ProblemList newList = db.ProblemLists.Create();
+            newList.Name = name;
+            db.ProblemLists.Add(newList);
+            db.SaveChanges();
+            return Json(new Response { Status = HttpStatusCode.OK });
+        }
+
+        [HttpGet]
+        [Route("api/ProblemLists/Remove/{id}")]
+        public JsonResult<Response> Remove(int id)
+        {
+            ProblemList pl = db.ProblemLists.First(p => p.Id == id);
+            if (pl == null)
+            {
+                return Json(new Response { Status = HttpStatusCode.OK, Message = "List not found" });
+            }
+            db.ProblemLists.Remove(pl);
+            db.SaveChanges();
+            return Json(new Response { Status = HttpStatusCode.OK });
+        }
     }
 }
