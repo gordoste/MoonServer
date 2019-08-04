@@ -29,7 +29,9 @@
                     <label for="repeatsGrp">Repeats:</label>
                 </div>
                 <div id="repeatsGrp" class="filters btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" data-filter="repeats:@Constants.GetString("GTEFirstCatName")">@("<" + Constants.GetFilter("repeats").Categories[0])</button>
+                    <button type="button" class="btn btn-outline-primary"
+                            data-filter="repeats:@(Constants.GetString("GTEFirstCatName") + Constants.GetFilter("repeats").Categories[0])">
+                    @("<" + Constants.GetFilter("repeats").Categories[0])</button>
                     @foreach (var r in Constants.GetFilter("repeats").Categories.ConvertAll(s => int.Parse(s)))
                     {
                         if (r > 0)
@@ -45,7 +47,9 @@
                     <label for="ratingGrp">Rating:</label>
                 </div>
                 <div id="ratingGrp" class="filters btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary" data-filter="rating:@Constants.GetString("GTEFirstCatName")">@("<" + Constants.GetFilter("rating").Categories[0])</button>
+                    <button type="button" class="btn btn-outline-primary"
+                            data-filter="rating:@(Constants.GetString("GTEFirstCatName") + Constants.GetFilter("rating").Categories[0])">
+                    @("<" + Constants.GetFilter("rating").Categories[0])</button>
                     @foreach (var r in Constants.GetFilter("rating").Categories.ConvertAll(s => int.Parse(s)))
                     {
                         if (r > 0)
@@ -207,10 +211,24 @@
                 _postFilters.push({ field: 'Grade', type: '=', value: postFilters['grade'] });
             }
             if (postFilters['repeats']) {
-                _postFilters.push({ field: 'Repeats', type: '>=', value: postFilters['repeats'] });
+                if (postFilters['repeats'].startsWith('@Constants.GetString("GTEFirstCatName")')) {
+                    _postFilters.push({
+                        field: 'Repeats', type: '<',
+                        value: postFilters['repeats'].replace('@Constants.GetString("GTEFirstCatName")','') });
+                }
+                else {
+                    _postFilters.push({ field: 'Repeats', type: '>=', value: postFilters['repeats'] });
+                }
             }
             if (postFilters['rating']) {
-                _postFilters.push({ field: 'Rating', type: '>=', value: postFilters['rating'] });
+                if (postFilters['rating'].startsWith('@Constants.GetString("GTEFirstCatName")')) {
+                    _postFilters.push({
+                        field: 'Rating', type: '<',
+                        value: postFilters['rating'].replace('@Constants.GetString("GTEFirstCatName")','') });
+                }
+                else {
+                    _postFilters.push({ field: 'Rating', type: '>=', value: postFilters['rating'] });
+                }
             }
             if (postFilters['benchmark']) {
                 _postFilters.push({ field: 'IsBenchmark', type: '=', value: true });
@@ -449,6 +467,9 @@
                 var preFilters = {};
                 $('.filters button.active').each(function (i, e) {
                     var filterParts = $(this).attr('data-filter').split(':');
+                    if (filterParts[1].startsWith('@Constants.GetString("GTEFirstCatName")')) {
+                        filterParts[1] = '@Constants.GetString("GTEFirstCatName")';
+                    }
                     if (filterParts[1] == "*") {
                         preFilters[filterParts[0]] = "@Constants.GetString("AllFilterName")";
                     } else {
