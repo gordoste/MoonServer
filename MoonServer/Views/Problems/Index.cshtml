@@ -198,24 +198,24 @@
         }
 
         var postFilters = {}; // No filters at the start
-        var refreshFilters = function () {
-            var _filters = [];
+        var refreshPostFilters = function () {
+            var _postFilters = []; // Build list of filters to pass to Tabulator
             if (postFilters['name']) {
-                _filters.push({ field: 'Name', type: 'like', value: postFilters['name'] });
+                _postFilters.push({ field: 'Name', type: 'like', value: postFilters['name'] });
             }
             if (postFilters['grade']) {
-                _filters.push({ field: 'Grade', type: '=', value: postFilters['grade'] });
+                _postFilters.push({ field: 'Grade', type: '=', value: postFilters['grade'] });
             }
             if (postFilters['repeats']) {
-                _filters.push({ field: 'Repeats', type: '>=', value: postFilters['repeats'] });
+                _postFilters.push({ field: 'Repeats', type: '>=', value: postFilters['repeats'] });
             }
             if (postFilters['rating']) {
-                _filters.push({ field: 'Rating', type: '>=', value: postFilters['rating'] });
+                _postFilters.push({ field: 'Rating', type: '>=', value: postFilters['rating'] });
             }
             if (postFilters['benchmark']) {
-                _filters.push({ field: 'IsBenchmark', type: '=', value: true });
+                _postFilters.push({ field: 'IsBenchmark', type: '=', value: true });
             }
-            $table.setFilter(_filters);
+            $table.setFilter(_postFilters);
         };
 
         // tables
@@ -279,7 +279,7 @@
             }
             nameFilterTimeout = setTimeout(function () {
                 postFilters['name'] = $(that).val();
-                refreshFilters();
+                refreshPostFilters();
             }, 1000);
         });
 
@@ -483,7 +483,7 @@
                             } else {
                                 postFilters[filterParts[0]] = filterParts[1];
                             }
-                            refreshFilters();
+                            refreshPostFilters();
                         });
                         problemSourceChanged(PROBLEM_SOURCE.FILTER);
                         $('#problems').attr('disabled', false);
