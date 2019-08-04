@@ -262,17 +262,29 @@ namespace DataLoader
             {
                 if (!ReplaceCheckBox.Checked)
                 {
+                    foreach (Problem sameIDproblem in sameIDProblems)
+                    {
+                        if (!sameIDproblem.Name.Equals(prb.Name))
+                        {
+                            throw new DuplicateException(
+                                String.Format("Same ID different name. MoonID={0} Name={1}/{2} ID={3}/{4}",
+                                    prb.MoonID, prb.Name, sameIDproblem.Name, prb.Id, sameIDproblem.Id));
+                        }
+                    }
                     if (ErrorOnDupCheckBox.Checked) { throw new DuplicateException("Duplicate MoonID for " + objTypeAndName); }
                     StatusTextBox.AppendText("Skipping " + objTypeAndName + " (duplicate MoonID)\n");
                     return false;
                 }
-                StatusTextBox.AppendText(String.Format("Removing {0} problem(s) with same ID as {1}\n", sameIDProblems.Count(), objTypeAndName));
-                foreach (Problem sameIDproblem in sameIDProblems)
+                else
                 {
-                    moonServer.ProblemPositions.RemoveRange(sameIDproblem.ProblemPositions);
-                    moonServer.StartProblemPositions.RemoveRange(sameIDproblem.StartProblemPositions);
-                    moonServer.EndProblemPositions.RemoveRange(sameIDproblem.EndProblemPositions);
-                    moonServer.Problems.Remove(sameIDproblem);
+                    StatusTextBox.AppendText(String.Format("Removing {0} problem(s) with same ID as {1}\n", sameIDProblems.Count(), objTypeAndName));
+                    foreach (Problem sameIDproblem in sameIDProblems)
+                    {
+                        moonServer.ProblemPositions.RemoveRange(sameIDproblem.ProblemPositions);
+                        moonServer.StartProblemPositions.RemoveRange(sameIDproblem.StartProblemPositions);
+                        moonServer.EndProblemPositions.RemoveRange(sameIDproblem.EndProblemPositions);
+                        moonServer.Problems.Remove(sameIDproblem);
+                    }
                 }
             }
             StatusTextBox.AppendText("Adding " + objTypeAndName + "\n");
