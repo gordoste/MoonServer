@@ -17,7 +17,7 @@ namespace DataLoader
 
         public LoadDataForm()
         {
-            AppDomain.CurrentDomain.SetData("DataDirectory", "C:\\Users\\stephen\\Desktop\\MoonServer\\MoonServer\\App_Data");
+            AppDomain.CurrentDomain.SetData("DataDirectory", "C:\\Users\\gordo\\source\\repos\\MoonServer\\MoonServer\\App_Data");
             InitializeComponent();
             _radioButtons = new List<RadioButton>{
                 GradesRadioBtn, ProblemsRadioBtn,
