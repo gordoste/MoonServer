@@ -518,7 +518,6 @@
     <Content Include="App_Data\moonserver.sqlite" />
     <Content Include="package.json" />
     <Content Include="constants.json" />
-    <Content Include="App_Data\moonserver_small.sqlite" />
     <Content Include="Scripts\bootstrap.min.js.map" />
     <Content Include="Scripts\bootstrap.js.map" />
     <Content Include="Scripts\bootstrap.bundle.min.js.map" />
