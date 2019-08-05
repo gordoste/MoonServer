@@ -149,7 +149,10 @@ namespace MoonServer
                         {
                             bytesRcvd = 0;
                         }
-                        throw se;
+                        else
+                        {
+                            throw se;
+                        }
                     }
                     catch (ObjectDisposedException)
                     {
@@ -167,7 +170,14 @@ namespace MoonServer
                         string rcvdStr = rcvdBuf.Substring(0, i);
                         rcvdMsgList.Add(rcvdStr);
                         Log.WriteLine(string.Format("Received: {0}", rcvdStr));
-                        rcvdBuf = rcvdBuf.Substring(i + 2);
+                        if (rcvdBuf.Length == i + 2)
+                        {
+                            rcvdBuf = "";
+                        }
+                        else
+                        {
+                            rcvdBuf = rcvdBuf.Substring(i + 2);
+                        }
                     }
                 }
             }
@@ -218,7 +228,15 @@ namespace MoonServer
 
         public void ShowProblem(int id)
         {
-            Problem prb = Database.Problems.First(p => p.Id == id);
+            Problem prb;
+            try
+            {
+                prb = Database.Problems.First(p => p.Id == id);
+            }
+            catch (InvalidOperationException)
+            {
+                throw new MoonboardClientException("Couldn't find problem in database");
+            }
             PositionStrings ps = new PositionStrings(prb);
             try
             {
@@ -266,7 +284,7 @@ namespace MoonServer
         }
     }
 
-    public class MoonboardClientException :Exception
+    public class MoonboardClientException : Exception
     {
         public MoonboardClientException() : base() { }
         public MoonboardClientException(string message) : base(message) { }
