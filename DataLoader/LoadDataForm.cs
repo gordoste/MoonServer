@@ -14,6 +14,12 @@ namespace DataLoader
     {
         private MoonServerDB moonServer = new MoonServerDB();
         private List<RadioButton> _radioButtons;
+        public enum UPDATE_RESULT
+        {
+            NONE = 0,
+            ADD = 1,
+            UPDATE_REPEATS = 2
+        };
 
         public LoadDataForm()
         {
@@ -146,21 +152,35 @@ namespace DataLoader
                     {
                         break;
                     }
-                    int pageSize = 500;
+                    int pageSize = 1000;
                     IEnumerable<ProblemProxy> problemProxies = JsonConvert.DeserializeObject<List<ProblemProxy>>(json)
                         .Skip(Int32.Parse(PageTextBox.Text) * pageSize)
                         .Take(pageSize);
 
                     recordsToProcess = problemProxies.Count();
+                    int recordsUpdated = 0;
                     ProgressBar.Maximum = recordsToProcess;
                     foreach (ProblemProxy p in problemProxies)
                     {
-                        if (LoadProblem(p)) { recordsLoaded++; }
+                        switch (LoadProblem(p))
+                        {
+                            case UPDATE_RESULT.NONE:
+                                break;
+                            case UPDATE_RESULT.ADD:
+                                recordsLoaded++;
+                                break;
+                            case UPDATE_RESULT.UPDATE_REPEATS:
+                                recordsUpdated++;
+                                break;
+                            default:
+                                throw new InvalidOperationException("Bad Update Result");
+                        }
                         recordsProcessed++;
                         ProgressBar.Value = recordsProcessed;
                         ProgressLbl.Text = String.Format("{0} / {1}", recordsProcessed, recordsToProcess);
                         Update();
                     }
+                    StatusTextBox.AppendText(String.Format("Updated {0} records\n", recordsUpdated));
                     break;
                 default: throw new ArgumentException("Invalid type");
             }
@@ -247,15 +267,29 @@ namespace DataLoader
             return true;
         }
 
-        private bool LoadProblem(ProblemProxy p)
+        private UPDATE_RESULT LoadProblem(ProblemProxy p)
         {
             Problem prb = Deproxy.GetProblem(p, moonServer);
             string objTypeAndName = p.GetDataType().ToLower() + ": " + p.FriendlyString();
             if (moonServer.Problems.Any(o => o.Name.Equals(prb.Name)))
             {
                 if (ErrorOnDupCheckBox.Checked) { throw new DuplicateException("Duplicate name for " + objTypeAndName); }
+                Problem existingProb = moonServer.Problems.First(o => o.Name.Equals(prb.Name));
+                if (!existingProb.MoonID.Equals(prb.MoonID))
+                {
+                    throw new DuplicateException(
+                        String.Format("Same name different MoonID. Name={0} MoonID={1}/{2} ID={3}/{4}",
+                                    prb.Name, prb.MoonID, existingProb.MoonID, prb.Id, existingProb.Id));
+                }
+                if (prb.Repeats > existingProb.Repeats)
+                {
+                    StatusTextBox.AppendText("Updating # repeats for " + objTypeAndName + "\n");
+                    existingProb.Repeats = prb.Repeats;
+                    moonServer.SaveChanges();
+                    return UPDATE_RESULT.UPDATE_REPEATS;
+                }
                 StatusTextBox.AppendText("Skipping duplicate " + objTypeAndName + "\n");
-                return false;
+                return UPDATE_RESULT.NONE;
             }
             IEnumerable<Problem> sameIDProblems = moonServer.Problems.Where(o => o.MoonID.Equals(prb.MoonID));
             if (sameIDProblems.Count() > 0)
@@ -267,13 +301,13 @@ namespace DataLoader
                         if (!sameIDproblem.Name.Equals(prb.Name))
                         {
                             throw new DuplicateException(
-                                String.Format("Same ID different name. MoonID={0} Name={1}/{2} ID={3}/{4}",
+                                String.Format("Same MoonID different name. MoonID={0} Name={1}/{2} ID={3}/{4}",
                                     prb.MoonID, prb.Name, sameIDproblem.Name, prb.Id, sameIDproblem.Id));
                         }
                     }
                     if (ErrorOnDupCheckBox.Checked) { throw new DuplicateException("Duplicate MoonID for " + objTypeAndName); }
                     StatusTextBox.AppendText("Skipping " + objTypeAndName + " (duplicate MoonID)\n");
-                    return false;
+                    return UPDATE_RESULT.NONE;
                 }
                 else
                 {
@@ -318,7 +352,7 @@ namespace DataLoader
                 });
             }
             moonServer.SaveChanges();
-            return true;
+            return UPDATE_RESULT.ADD;
         }
 
         private void SaveBtn_Click(object sender, EventArgs e)
