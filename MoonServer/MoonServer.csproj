@@ -541,6 +541,7 @@
     <Content Include="lib\bootstrap-toggle\js\bootstrap-toggle.min.js.map" />
     <Content Include="lib\bootstrap-toggle\js\bootstrap2-toggle.min.js.map" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
+    <Content Include="Scripts\fetch.umd.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
     <Content Include="Scripts\jquery-3.4.1.min.js" />
     <Content Include="Scripts\jquery-3.4.1.slim.js" />
