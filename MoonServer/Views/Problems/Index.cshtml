@@ -381,7 +381,7 @@
             });
 
             $('#addBtn').on('click tap', function () {
-                $('#addListsModal').modal().on('shown.bs.modal', function(event) {
+                $('#addProbModal').modal().on('shown.bs.modal', function(event) {
                     $addListTable = new Tabulator("#addProbTbl", {
                         ajaxURL: "/api/ProblemLists/Get", //ajax URL
                         ajaxConfig: "get", //ajax HTTP request type
@@ -411,7 +411,7 @@
                             })
                                 .done(function (data) {
                                     if (data['Message'].length > 0) { alert(data['Message']); }
-                                    $('#addListsModal').modal('hide');
+                                    $('#addProbModal').modal('hide');
                                     refreshProblemLists();
                                 });
                         }
