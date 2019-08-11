@@ -22,16 +22,19 @@ namespace MoonServer
 
     public static class Constants
     {
-        public static string ConstantsFile = string.Format("{0}\\{1}", AppDomain.CurrentDomain.BaseDirectory, "constants.json");
+        public static Configuration Config;
+        public static Dictionary<string, string> FileSettings;
 
-        public static readonly Configuration Config;
-        public static readonly Dictionary<string, string> FileSettings;
+        static Constants() { Init(AppDomain.CurrentDomain.BaseDirectory); }
 
-        static Constants()
+        public static void Init(string storageDir)
         {
-            Config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(ConstantsFile));
-            string configFile = String.Format("{0}\\{1}", AppDomain.CurrentDomain.BaseDirectory, "config.json");
-            string a = JsonConvert.SerializeObject(Config.Strings);
+            string constantsFile = string.Format("{0}\\{1}", storageDir, "constants.json");
+            if (File.Exists(constantsFile)) {
+                Config = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(constantsFile));
+            }
+
+            string configFile = String.Format("{0}\\{1}", storageDir, "config.json");
             if (File.Exists(configFile))
             {
                 FileSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(configFile));

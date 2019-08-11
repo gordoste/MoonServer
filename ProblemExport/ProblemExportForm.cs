@@ -12,7 +12,8 @@ namespace ProblemExport
 
         public ProblemExportForm()
         {
-            AppDomain.CurrentDomain.SetData("DataDirectory", "C:\\Users\\gordo\\source\\repos\\MoonServer\\MoonServer\\App_Data");
+            AppDomain.CurrentDomain.SetData("DataDirectory", @"C:\Users\gordo\source\repos\MoonServer\MoonServer\App_Data");
+            MoonServer.Constants.Init(AppDomain.CurrentDomain.BaseDirectory + @"\..\..\..\MoonServer");
             InitializeComponent();
             gradeCombo.Items.Add("Any");
             gradeCombo.Items.AddRange(moonServer.Grades.ToList().ConvertAll(g => g.AmericanName).ToArray());
