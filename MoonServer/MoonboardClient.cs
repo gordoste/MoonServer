@@ -125,7 +125,7 @@ namespace MoonServer
                 char[] chars;
                 int bytesRcvd = 0;
                 byte[] rcvBuffer = new byte[256];
-                while (rcvdMsgList.Count == 0)
+                while (rcvdMsgList.Count == 0 && clientSock != null)
                 {
                     try
                     {
