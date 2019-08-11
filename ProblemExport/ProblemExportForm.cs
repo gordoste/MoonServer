@@ -35,31 +35,59 @@ namespace ProblemExport
             {
                 return;
             }
-            string fileName = folderDlg.SelectedPath + @"\" + String.Join("_", gradeCombo.Text, ratingCombo.Text, repeatsCombo.Text, benchmarkCombo.Text) + ".dat";
-            if (File.Exists(fileName))
+            ExportProblems(gradeCombo.Text, ratingCombo.Text, repeatsCombo.Text, benchmarkCombo.Text, folderDlg.SelectedPath, true);
+        }
+
+        private void autoExportBtn_Click(object sender, EventArgs e)
+        {
+            if (folderDlg.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+            ExportProblems("V4", "2", "20", "Any", folderDlg.SelectedPath, false);
+            ExportProblems("V5", "2", "20", "Any", folderDlg.SelectedPath, false);
+            ExportProblems("V6", "2", "20", "Any", folderDlg.SelectedPath, false);
+            ExportProblems("V4", "3", "Any", "Any", folderDlg.SelectedPath, false);
+            ExportProblems("V5", "3", "Any", "Any", folderDlg.SelectedPath, false);
+            ExportProblems("V6", "3", "Any", "Any", folderDlg.SelectedPath, false);
+        }
+
+        protected void ExportProblems(string grade, string rating, string repeats, string benchmark, string folder, bool askOverwrite)
+        {
+            StatusTextBox.AppendText("Exporting " + String.Join("/", grade, rating, repeats, benchmark + "..."));
+            string fileName = String.Format(@"{0}\{1}.dat", folder, String.Join("_", grade, rating, repeats, benchmark));
+            if (askOverwrite && File.Exists(fileName))
             {
                 DialogResult owrite = MessageBox.Show("File " + fileName + " already exists. Overwrite?",
                     "File Exists", MessageBoxButtons.YesNo);
                 if (owrite == DialogResult.No) { return; }
             }
-            StreamWriter f = new StreamWriter(fileName);
             int ratingChoice = 0;
-            if (ratingCombo.Text != "Any") { ratingChoice = int.Parse(ratingCombo.Text); }
+            if (rating != "Any") { ratingChoice = int.Parse(rating); }
             int repeatsChoice = 0;
-            if (repeatsCombo.Text != "Any") { repeatsChoice = int.Parse(repeatsCombo.Text); }
+            if (repeats != "Any") { repeatsChoice = int.Parse(repeats); }
+            StreamWriter f = new StreamWriter(fileName);
             foreach (Problem p in moonServer.Problems.Where(prb =>
-                (gradeCombo.Text.Equals("Any") || prb.Grade.AmericanName.Equals(gradeCombo.Text)) &&
-                (ratingCombo.Text.Equals("Any") || prb.Rating >= ratingChoice) &&
-                (repeatsCombo.Text.Equals("Any") || prb.Repeats >= repeatsChoice) &&
-                (benchmarkCombo.Text.Equals("Any") || prb.IsBenchmark)
+                (grade.Equals("Any") || prb.Grade.AmericanName.Equals(grade)) &&
+                (rating.Equals("Any") || prb.Rating >= ratingChoice) &&
+                (repeats.Equals("Any") || prb.Repeats >= repeatsChoice) &&
+                (benchmark.Equals("Any") || prb.IsBenchmark)
             ))
             {
-                f.WriteLine(String.Format("{0}:{1}",
+                MoonServer.PositionStrings ps = new MoonServer.PositionStrings(p);
+                f.WriteLine(String.Join(":",
                     p.Name,
-                    String.Join(",", p.ProblemPositions.ToList().ConvertAll(pp => pp.Position.Name))
+                    p.Grade.AmericanName,
+                    p.Rating,
+                    p.Repeats,
+                    p.IsBenchmark ? "Y" : "N",
+                    String.Join(" ", ps.Bottom.ToArray()),
+                    String.Join(" ", ps.Middle.ToArray()),
+                    String.Join(" ", ps.Top.ToArray())
                 ));
             }
             f.Close();
+            StatusTextBox.AppendText("Done\n");
         }
     }
 }

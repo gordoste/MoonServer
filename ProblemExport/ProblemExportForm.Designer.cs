@@ -38,11 +38,13 @@
             this.ratingCombo = new System.Windows.Forms.ComboBox();
             this.benchmarkCombo = new System.Windows.Forms.ComboBox();
             this.repeatsCombo = new System.Windows.Forms.ComboBox();
+            this.autoExportBtn = new System.Windows.Forms.Button();
+            this.StatusTextBox = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // exportBtn
             // 
-            this.exportBtn.Location = new System.Drawing.Point(174, 162);
+            this.exportBtn.Location = new System.Drawing.Point(39, 163);
             this.exportBtn.Name = "exportBtn";
             this.exportBtn.Size = new System.Drawing.Size(75, 23);
             this.exportBtn.TabIndex = 0;
@@ -122,11 +124,32 @@
             this.repeatsCombo.Size = new System.Drawing.Size(121, 21);
             this.repeatsCombo.TabIndex = 8;
             // 
+            // autoExportBtn
+            // 
+            this.autoExportBtn.Location = new System.Drawing.Point(158, 163);
+            this.autoExportBtn.Name = "autoExportBtn";
+            this.autoExportBtn.Size = new System.Drawing.Size(75, 23);
+            this.autoExportBtn.TabIndex = 9;
+            this.autoExportBtn.Text = "Auto-Export";
+            this.autoExportBtn.UseVisualStyleBackColor = true;
+            this.autoExportBtn.Click += new System.EventHandler(this.autoExportBtn_Click);
+            // 
+            // StatusTextBox
+            // 
+            this.StatusTextBox.Location = new System.Drawing.Point(12, 205);
+            this.StatusTextBox.Multiline = true;
+            this.StatusTextBox.Name = "StatusTextBox";
+            this.StatusTextBox.ReadOnly = true;
+            this.StatusTextBox.Size = new System.Drawing.Size(353, 122);
+            this.StatusTextBox.TabIndex = 10;
+            // 
             // ProblemExportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(326, 229);
+            this.ClientSize = new System.Drawing.Size(377, 339);
+            this.Controls.Add(this.StatusTextBox);
+            this.Controls.Add(this.autoExportBtn);
             this.Controls.Add(this.repeatsCombo);
             this.Controls.Add(this.benchmarkCombo);
             this.Controls.Add(this.ratingCombo);
@@ -155,6 +178,8 @@
         private System.Windows.Forms.ComboBox ratingCombo;
         private System.Windows.Forms.ComboBox benchmarkCombo;
         private System.Windows.Forms.ComboBox repeatsCombo;
+        private System.Windows.Forms.Button autoExportBtn;
+        private System.Windows.Forms.TextBox StatusTextBox;
     }
 }
 
