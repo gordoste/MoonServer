@@ -36,6 +36,7 @@ namespace MoonServer
                 if (rowNum < 1 || rowNum > 17) { throw new InvalidHoldException(string.Format("Bad row num {0}", rowNum)); }
                 if (rowNum <= 6)
                 {
+                    // Add 6 to the row number because the green lights are 0-5, blue lights are 6-11 on bottom panel
                     Bottom.Add(string.Format("{0}{1}", (char)(('A' - 1) + rowNum + 6), colCode));
                 }
                 else if (rowNum <= 12)
