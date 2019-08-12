@@ -1,5 +1,6 @@
 ﻿using MoonServer.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -40,6 +41,9 @@ namespace ProblemExport
 
         private void autoExportBtn_Click(object sender, EventArgs e)
         {
+            List<Control> controlList = new List<Control>(new Control[] { autoExportBtn, exportBtn, gradeCombo, ratingCombo, repeatsCombo, benchmarkCombo });
+            foreach (Control c in controlList) { c.Enabled = false; }
+
             if (folderDlg.ShowDialog() != DialogResult.OK)
             {
                 return;
@@ -50,6 +54,8 @@ namespace ProblemExport
             ExportProblems("V4", "3", "Any", "Any", folderDlg.SelectedPath, false);
             ExportProblems("V5", "3", "Any", "Any", folderDlg.SelectedPath, false);
             ExportProblems("V6", "3", "Any", "Any", folderDlg.SelectedPath, false);
+
+            foreach (Control c in controlList) { c.Enabled = true; }
         }
 
         protected void ExportProblems(string grade, string rating, string repeats, string benchmark, string folder, bool askOverwrite)
