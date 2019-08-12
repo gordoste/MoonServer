@@ -195,7 +195,6 @@
                     { title: "Id", field: "Id", visible: false }
                 ],
                 selectable: 1,
-                rowTap: function (e, row) { row.toggleSelect(); },
                 rowSelected: function (row) {
                     $('#problems').attr('disabled', true);
                     loadProblemsFromList(row.getData().Id);
@@ -326,7 +325,6 @@
                         { title: "Id", field: "Id", visible: false }
                     ],
                     selectable: 1,
-                    rowTap: function (e, row) { row.toggleSelect(); },
                     rowSelected: function (row) {
                         if (!$('#mbToggle').prop('checked')) {
                             return;
@@ -400,7 +398,6 @@
                             { title: "Id", field: "Id", visible: false }
                         ],
                         selectable: 1,
-                        rowTap: function (e, row) { row.toggleSelect(); },
                         rowSelected: function (row) {
                             var listId = row.getData().Id;
                             var probs = $table.getSelectedRows();
