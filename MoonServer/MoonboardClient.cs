@@ -81,22 +81,7 @@ namespace MoonServer
                 }
                 catch (SocketException se)
                 {
-                    if (se.SocketErrorCode == SocketError.TimedOut)
-                    {
-                        throw new MoonboardClientException("SendCommand(): Timed out");
-                    }
-                    if (se.SocketErrorCode == SocketError.NotConnected)
-                    {
-                        throw new MoonboardClientException("SendCommand(): Socket not connected");
-                    }
-                    if (se.SocketErrorCode == SocketError.ConnectionAborted)
-                    {
-                        throw new MoonboardClientException("SendCommand(): Connection aborted");
-                    }
-                    if (se.SocketErrorCode == SocketError.Interrupted)
-                    {
-                        throw new MoonboardClientException("SendCommand(): Command interrupted");
-                    }
+                    throw new MoonboardClientException("SendCommand(): " + se.Message);
                 }
                 WaitForAck(CmdId);
                 CmdId++;
@@ -133,26 +118,7 @@ namespace MoonServer
                     }
                     catch (SocketException se)
                     {
-                        if (se.SocketErrorCode == SocketError.TimedOut)
-                        {
-                            throw new MoonboardClientException("ReceiveLines(): Timed out");
-                        }
-                        if (se.SocketErrorCode == SocketError.NotConnected)
-                        {
-                            throw new MoonboardClientException("ReceiveLines(): Socket not connected");
-                        }
-                        if (se.SocketErrorCode == SocketError.ConnectionAborted)
-                        {
-                            throw new MoonboardClientException("ReceiveLines(): Connection aborted");
-                        }
-                        if (se.SocketErrorCode == SocketError.Interrupted)
-                        {
-                            bytesRcvd = 0;
-                        }
-                        else
-                        {
-                            throw se;
-                        }
+                        throw new MoonboardClientException("ReceiveLines(): " + se.Message);
                     }
                     catch (ObjectDisposedException)
                     {
@@ -185,8 +151,19 @@ namespace MoonServer
             public void OpenConnection()
             {
                 clientSock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                clientSock.Connect(Address, Port);
+                if (clientSock == null)
+                {
+                    throw new MoonboardClientException("OpenConnection(): Failed to create socket");
+                }
                 clientSock.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 10000);
+                try
+                {
+                    clientSock.Connect(Address, Port);
+                }
+                catch (SocketException se)
+                {
+                    throw new MoonboardClientException("OpenConnection(): " + se.Message);
+                }
                 rcvdMsgList = new List<string>();
                 rcvdBuf = "";
                 Log.WriteLine("Connection opened");
@@ -243,19 +220,16 @@ namespace MoonServer
                 btmPanel.OpenConnection();
                 midPanel.OpenConnection();
                 topPanel.OpenConnection();
-            }
-            catch (SocketException se)
-            {
-                throw new MoonboardClientException(string.Format("{0}:{1}", se.SocketErrorCode, se.Message));
-            }
-            try
-            {
                 btmPanel.ClearBoard();
                 midPanel.ClearBoard();
                 topPanel.ClearBoard();
                 btmPanel.LightHolds(ps.Bottom);
                 midPanel.LightHolds(ps.Middle);
                 topPanel.LightHolds(ps.Top);
+            }
+            catch (SocketException se)
+            {
+                throw new MoonboardClientException(string.Format("{0}:{1}", se.SocketErrorCode, se.Message));
             }
             catch (MoonboardClientException mbe)
             {
