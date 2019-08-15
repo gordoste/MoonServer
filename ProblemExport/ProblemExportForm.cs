@@ -61,27 +61,41 @@ namespace ProblemExport
         protected void ExportProblems(string grade, string rating, string repeats, string benchmark, string folder, bool askOverwrite)
         {
             StatusTextBox.AppendText("Exporting " + String.Join("/", grade, rating, repeats, benchmark + "..."));
-            string fileName = String.Format(@"{0}\{1}.dat", folder, String.Join("_", grade, rating, repeats, benchmark));
-            if (askOverwrite && File.Exists(fileName))
-            {
-                DialogResult owrite = MessageBox.Show("File " + fileName + " already exists. Overwrite?",
-                    "File Exists", MessageBoxButtons.YesNo);
-                if (owrite == DialogResult.No) { return; }
-            }
+            string filterName = String.Join("_", grade, rating, repeats, benchmark);
+
             int ratingChoice = 0;
             if (rating != "Any") { ratingChoice = int.Parse(rating); }
             int repeatsChoice = 0;
             if (repeats != "Any") { repeatsChoice = int.Parse(repeats); }
-            StreamWriter f = new StreamWriter(fileName);
-            foreach (Problem p in moonServer.Problems.Where(prb =>
+
+            // Find the problems we want
+            IEnumerable<Problem> matchingProbs = moonServer.Problems.Where(prb =>
                 (grade.Equals("Any") || prb.Grade.AmericanName.Equals(grade)) &&
                 (rating.Equals("Any") || prb.Rating >= ratingChoice) &&
                 (repeats.Equals("Any") || prb.Repeats >= repeatsChoice) &&
                 (benchmark.Equals("Any") || prb.IsBenchmark)
-            ))
+            );
+
+            // Key - problem's MoonID. Value - offset in data file
+            Dictionary<int, int> probOffsets = new Dictionary<int, int>();
+            int curOffset = 0;
+
+            // Write data file containing complete problem info
+            string dataFileName = String.Format(@"{0}\{1}.dat", folder, filterName);
+            if (askOverwrite && File.Exists(dataFileName))
+            {
+                DialogResult owrite = MessageBox.Show("File " + dataFileName + " already exists. Overwrite?",
+                    "File Exists", MessageBoxButtons.YesNo);
+                if (owrite == DialogResult.No) { return; }
+            }
+            StreamWriter f = new StreamWriter(dataFileName)
+            {
+                NewLine = "\n"
+            };
+            foreach (Problem p in matchingProbs)
             {
                 MoonServer.PositionStrings ps = new MoonServer.PositionStrings(p);
-                f.WriteLine(String.Join(":",
+                String probData = String.Join(":",
                     p.Name,
                     p.Grade.AmericanName,
                     p.Rating,
@@ -90,9 +104,36 @@ namespace ProblemExport
                     String.Join(" ", ps.Bottom.ToArray()),
                     String.Join(" ", ps.Middle.ToArray()),
                     String.Join(" ", ps.Top.ToArray())
-                ));
+                );
+                probOffsets.Add(p.MoonID, curOffset);
+                f.WriteLine(probData);
+                curOffset += probData.Length + 1;
             }
             f.Close();
+
+            // Write list file containing problems in order with offset of each one in data file
+            string listFileName = String.Format(@"{0}\{1}_name.lst", folder, filterName);
+            StreamWriter l = new StreamWriter(listFileName)
+            {
+                NewLine = "\n"
+            };
+            foreach (Problem p in matchingProbs.OrderBy(p => p.Name))
+            {
+                l.WriteLine(p.MoonID + ":" + probOffsets[p.MoonID]);
+            }
+            l.Close();
+
+            listFileName = String.Format(@"{0}\{1}_rpts.lst", folder, filterName);
+            l = new StreamWriter(listFileName)
+            {
+                NewLine = "\n"
+            };
+            foreach (Problem p in matchingProbs.OrderByDescending(p => p.Repeats))
+            {
+                l.WriteLine(p.MoonID + ":" + probOffsets[p.MoonID]);
+            }
+            l.Close();
+
             StatusTextBox.AppendText("Done\n");
         }
     }
