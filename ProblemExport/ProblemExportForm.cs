@@ -107,7 +107,7 @@ namespace ProblemExport
                 );
                 probOffsets.Add(p.MoonID, curOffset);
                 f.WriteLine(probData);
-                curOffset += probData.Length + 1;
+                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
             }
             f.Close();
 
