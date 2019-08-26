@@ -95,7 +95,7 @@ namespace ProblemExport
             foreach (Problem p in matchingProbs)
             {
                 MoonServer.PositionStrings ps = new MoonServer.PositionStrings(p);
-                String probData = String.Join(":",
+                String probData = String.Join("|",
                     p.Name,
                     p.Grade.AmericanName,
                     p.Rating,
