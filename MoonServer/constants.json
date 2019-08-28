@@ -2,7 +2,7 @@
   "Strings": {
     "AllFilterName": "X",
     "GTEFirstCatName": "FC",
-    "MaxProblemsReturned": 2500,
+    "MaxProblemsReturned": 5000,
     "TooManyProblemsCode": "TOO_MANY_PROBLEMS"
   },
   "Filters": [
