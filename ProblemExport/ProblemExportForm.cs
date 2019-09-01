@@ -11,6 +11,21 @@ namespace ProblemExport
     {
         private MoonServerDB moonServer = new MoonServerDB();
 
+        private string ProblemAsString(Problem p)
+        {
+            MoonServer.PositionStrings ps = new MoonServer.PositionStrings(p);
+            return String.Join("|",
+                p.Name,
+                p.Grade.AmericanName,
+                p.Rating,
+                p.Repeats,
+                p.IsBenchmark ? "Y" : "N",
+                String.Join(" ", ps.Bottom.ToArray()),
+                String.Join(" ", ps.Middle.ToArray()),
+                String.Join(" ", ps.Top.ToArray())
+            );
+        }
+
         public ProblemExportForm()
         {
             AppDomain.CurrentDomain.SetData("DataDirectory", @"C:\Users\gordo\source\repos\MoonServer\MoonServer\App_Data");
@@ -94,17 +109,7 @@ namespace ProblemExport
             };
             foreach (Problem p in matchingProbs)
             {
-                MoonServer.PositionStrings ps = new MoonServer.PositionStrings(p);
-                String probData = String.Join("|",
-                    p.Name,
-                    p.Grade.AmericanName,
-                    p.Rating,
-                    p.Repeats,
-                    p.IsBenchmark ? "Y" : "N",
-                    String.Join(" ", ps.Bottom.ToArray()),
-                    String.Join(" ", ps.Middle.ToArray()),
-                    String.Join(" ", ps.Top.ToArray())
-                );
+                String probData = ProblemAsString(p);
                 probOffsets.Add(p.MoonID, curOffset);
                 f.WriteLine(probData);
                 curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
@@ -135,6 +140,47 @@ namespace ProblemExport
             l.Close();
 
             StatusTextBox.AppendText("Done\n");
+        }
+
+        private void exportListsBtn_Click(object sender, EventArgs e)
+        {
+            if (folderDlg.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+            string listDir = String.Format(@"{0}\l", folderDlg.SelectedPath);
+            if (!Directory.Exists(listDir))
+            {
+                if (File.Exists(listDir))
+                {
+                    StatusTextBox.AppendText("ERROR: File '" + listDir + "' exists." + "\n");
+                    return;
+                }
+                try
+                {
+                    Directory.CreateDirectory(listDir);
+                }
+                catch (Exception ex)
+                {
+                    StatusTextBox.AppendText("Error creating '" + listDir + "': " + ex.Message + "\n");
+                    return;
+                }
+            }
+            foreach (ProblemList pl in moonServer.ProblemLists)
+            {
+                StatusTextBox.AppendText("Exporting list '" + pl.Name + "'\n");
+                string dataFileName = String.Format(@"{0}\{1}.dat", listDir, pl.Name);
+                StreamWriter f = new StreamWriter(dataFileName)
+                {
+                    NewLine = "\n"
+                };
+                foreach (ProblemListEntry ple in pl.ProblemListEntries)
+                {
+                    f.WriteLine(ProblemAsString(ple.Problem));
+                }
+                f.Close();
+            }
+            StatusTextBox.AppendText("Done.\n");
         }
     }
 }

@@ -40,6 +40,7 @@
             this.repeatsCombo = new System.Windows.Forms.ComboBox();
             this.autoExportBtn = new System.Windows.Forms.Button();
             this.StatusTextBox = new System.Windows.Forms.TextBox();
+            this.exportListsBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // exportBtn
@@ -143,11 +144,22 @@
             this.StatusTextBox.Size = new System.Drawing.Size(353, 122);
             this.StatusTextBox.TabIndex = 10;
             // 
+            // exportListsBtn
+            // 
+            this.exportListsBtn.Location = new System.Drawing.Point(269, 163);
+            this.exportListsBtn.Name = "exportListsBtn";
+            this.exportListsBtn.Size = new System.Drawing.Size(75, 23);
+            this.exportListsBtn.TabIndex = 11;
+            this.exportListsBtn.Text = "Export Lists";
+            this.exportListsBtn.UseVisualStyleBackColor = true;
+            this.exportListsBtn.Click += new System.EventHandler(this.exportListsBtn_Click);
+            // 
             // ProblemExportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(377, 339);
+            this.Controls.Add(this.exportListsBtn);
             this.Controls.Add(this.StatusTextBox);
             this.Controls.Add(this.autoExportBtn);
             this.Controls.Add(this.repeatsCombo);
@@ -180,6 +192,7 @@
         private System.Windows.Forms.ComboBox repeatsCombo;
         private System.Windows.Forms.Button autoExportBtn;
         private System.Windows.Forms.TextBox StatusTextBox;
+        private System.Windows.Forms.Button exportListsBtn;
     }
 }
 
