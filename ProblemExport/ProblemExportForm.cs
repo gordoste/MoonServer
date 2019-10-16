@@ -139,7 +139,7 @@ namespace ProblemExport
             }
             l.Close();
 
-            StatusTextBox.AppendText("Done\n");
+            StatusTextBox.AppendText("Done\r\n");
         }
 
         private void exportListsBtn_Click(object sender, EventArgs e)
@@ -153,7 +153,7 @@ namespace ProblemExport
             {
                 if (File.Exists(listDir))
                 {
-                    StatusTextBox.AppendText("ERROR: File '" + listDir + "' exists." + "\n");
+                    StatusTextBox.AppendText("ERROR: File '" + listDir + "' exists." + "\r\n");
                     return;
                 }
                 try
@@ -162,13 +162,13 @@ namespace ProblemExport
                 }
                 catch (Exception ex)
                 {
-                    StatusTextBox.AppendText("Error creating '" + listDir + "': " + ex.Message + "\n");
+                    StatusTextBox.AppendText("Error creating '" + listDir + "': " + ex.Message + "\r\n");
                     return;
                 }
             }
             foreach (ProblemList pl in moonServer.ProblemLists)
             {
-                StatusTextBox.AppendText("Exporting list '" + pl.Name + "'\n");
+                StatusTextBox.AppendText("Exporting list '" + pl.Name + "'\r\n");
                 string dataFileName = String.Format(@"{0}\{1}.dat", listDir, pl.Name);
                 StreamWriter f = new StreamWriter(dataFileName)
                 {
@@ -180,7 +180,7 @@ namespace ProblemExport
                 }
                 f.Close();
             }
-            StatusTextBox.AppendText("Done.\n");
+            StatusTextBox.AppendText("Done.\r\n");
         }
     }
 }
