@@ -1,6 +1,7 @@
 ﻿using MoonServer.Models;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -10,6 +11,8 @@ namespace ProblemExport
     public partial class ProblemExportForm : Form
     {
         private MoonServerDB moonServer = new MoonServerDB();
+        private string BMARK_YES = "Yes";
+        private string BMARK_NO = "No";
 
         private string ProblemAsString(Problem p)
         {
@@ -31,45 +34,40 @@ namespace ProblemExport
             AppDomain.CurrentDomain.SetData("DataDirectory", @"C:\Users\gordo\source\repos\MoonServer\MoonServer\App_Data");
             MoonServer.Constants.Init(AppDomain.CurrentDomain.BaseDirectory + @"\..\..\..\MoonServer");
             InitializeComponent();
-            gradeCombo.Items.Add("Any");
-            gradeCombo.Items.AddRange(moonServer.Grades.ToList().ConvertAll(g => g.AmericanName).ToArray());
-            gradeCombo.SelectedItem = "Any";
-            ratingCombo.Items.Add("Any");
-            ratingCombo.Items.AddRange(MoonServer.Constants.GetFilter("rating").Categories.ToArray());
-            ratingCombo.SelectedItem = "Any";
-            repeatsCombo.Items.Add("Any");
-            repeatsCombo.Items.AddRange(MoonServer.Constants.GetFilter("repeats").Categories.ToArray());
-            repeatsCombo.SelectedItem = "Any";
-            benchmarkCombo.Items.Add("Any");
-            benchmarkCombo.Items.Add("Yes");
-            benchmarkCombo.SelectedItem = "Any";
-        }
-
-        private void ExportBtn_Click(object sender, EventArgs e)
-        {
-            if (folderDlg.ShowDialog() != DialogResult.OK)
-            {
-                return;
-            }
-            ExportProblems(gradeCombo.Text, ratingCombo.Text, repeatsCombo.Text, benchmarkCombo.Text, folderDlg.SelectedPath, true);
+            gradeCheckedListBox.Items.Add("Any", true);
+            gradeCheckedListBox.Items.AddRange(MoonServer.Constants.GetFilter("grade").Categories.ToArray());
+            ratingCheckedListBox.Items.Add("Any", true);
+            ratingCheckedListBox.Items.AddRange(MoonServer.Constants.GetFilter("rating").Categories.ToArray());
+            repeatsCheckedListBox.Items.Add("Any", true);
+            repeatsCheckedListBox.Items.AddRange(MoonServer.Constants.GetFilter("repeats").Categories.ToArray());
+            bmarkCheckedListBox.Items.Add("Any", true);
+            bmarkCheckedListBox.Items.Add(BMARK_YES);
+            bmarkCheckedListBox.Items.Add(BMARK_NO);
         }
 
         private void autoExportBtn_Click(object sender, EventArgs e)
         {
-            List<Control> controlList = new List<Control>(new Control[] { autoExportBtn, exportBtn, gradeCombo, ratingCombo, repeatsCombo, benchmarkCombo });
+            List<Control> controlList = new List<Control>(new Control[] { autoExportBtn, gradeCheckedListBox, ratingCheckedListBox, repeatsCheckedListBox, bmarkCheckedListBox });
             foreach (Control c in controlList) { c.Enabled = false; }
 
             if (folderDlg.ShowDialog() != DialogResult.OK)
             {
                 return;
             }
-            ExportProblems("V4", "2", "20", "Any", folderDlg.SelectedPath, false);
-            ExportProblems("V5", "2", "20", "Any", folderDlg.SelectedPath, false);
-            ExportProblems("V6", "2", "20", "Any", folderDlg.SelectedPath, false);
-            ExportProblems("V4", "3", "Any", "Any", folderDlg.SelectedPath, false);
-            ExportProblems("V5", "3", "Any", "Any", folderDlg.SelectedPath, false);
-            ExportProblems("V6", "3", "Any", "Any", folderDlg.SelectedPath, false);
 
+            foreach (string iGrade in gradeCheckedListBox.CheckedItems)
+            {
+                foreach (string iRating in ratingCheckedListBox.CheckedItems)
+                {
+                    foreach (string iRepeats in repeatsCheckedListBox.CheckedItems)
+                    {
+                        foreach (string iBmark in bmarkCheckedListBox.CheckedItems)
+                        {
+                            ExportProblems(iGrade, iRating, iRepeats, iBmark, folderDlg.SelectedPath, false);
+                        }
+                    }
+                }
+            }
             foreach (Control c in controlList) { c.Enabled = true; }
         }
 
@@ -88,7 +86,7 @@ namespace ProblemExport
                 (grade.Equals("Any") || prb.Grade.AmericanName.Equals(grade)) &&
                 (rating.Equals("Any") || prb.Rating >= ratingChoice) &&
                 (repeats.Equals("Any") || prb.Repeats >= repeatsChoice) &&
-                (benchmark.Equals("Any") || prb.IsBenchmark)
+                (benchmark.Equals("Any") || (prb.IsBenchmark && benchmark.Equals(BMARK_YES)) || (!prb.IsBenchmark && benchmark.Equals(BMARK_NO)))
             );
 
             // Key - problem's MoonID. Value - offset in data file
