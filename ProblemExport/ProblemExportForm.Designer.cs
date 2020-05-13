@@ -124,7 +124,6 @@
             this.ratingCheckedListBox.Name = "ratingCheckedListBox";
             this.ratingCheckedListBox.Size = new System.Drawing.Size(120, 94);
             this.ratingCheckedListBox.TabIndex = 13;
-            this.ratingCheckedListBox.SelectedIndexChanged += new System.EventHandler(this.ratingCheckedListBox_SelectedIndexChanged);
             // 
             // bmarkCheckedListBox
             // 
