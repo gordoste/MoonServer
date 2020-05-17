@@ -74,7 +74,10 @@ namespace ProblemExport
         protected void ExportProblems(string grade, string rating, string repeats, string benchmark, string folder, bool askOverwrite)
         {
             StatusTextBox.AppendText("Exporting " + String.Join("/", grade, rating, repeats, benchmark + "..."));
-            string filterName = String.Join("_", grade, rating, repeats, benchmark);
+            string bmarkStr = "Any";
+            if (benchmark.Equals(BMARK_YES)) bmarkStr = "Y";
+            if (benchmark.Equals(BMARK_NO)) bmarkStr = "N";
+            string filterName = String.Join("_", grade, rating, repeats, bmarkStr);
 
             int ratingChoice = 0;
             if (rating != "Any") { ratingChoice = int.Parse(rating); }
