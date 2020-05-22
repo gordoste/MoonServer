@@ -40,6 +40,9 @@
             this.ratingCheckedListBox = new System.Windows.Forms.CheckedListBox();
             this.bmarkCheckedListBox = new System.Windows.Forms.CheckedListBox();
             this.repeatsCheckedListBox = new System.Windows.Forms.CheckedListBox();
+            this.pageSizeUpDown = new System.Windows.Forms.NumericUpDown();
+            this.pageSizeLbl = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.pageSizeUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // gradeLbl
@@ -143,11 +146,35 @@
             this.repeatsCheckedListBox.Size = new System.Drawing.Size(120, 94);
             this.repeatsCheckedListBox.TabIndex = 15;
             // 
+            // pageSizeUpDown
+            // 
+            this.pageSizeUpDown.Location = new System.Drawing.Point(697, 116);
+            this.pageSizeUpDown.Name = "pageSizeUpDown";
+            this.pageSizeUpDown.ReadOnly = true;
+            this.pageSizeUpDown.Size = new System.Drawing.Size(40, 20);
+            this.pageSizeUpDown.TabIndex = 16;
+            this.pageSizeUpDown.Value = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            // 
+            // pageSizeLbl
+            // 
+            this.pageSizeLbl.AutoSize = true;
+            this.pageSizeLbl.Location = new System.Drawing.Point(637, 118);
+            this.pageSizeLbl.Name = "pageSizeLbl";
+            this.pageSizeLbl.Size = new System.Drawing.Size(58, 13);
+            this.pageSizeLbl.TabIndex = 17;
+            this.pageSizeLbl.Text = "Page Size:";
+            // 
             // ProblemExportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(790, 350);
+            this.Controls.Add(this.pageSizeLbl);
+            this.Controls.Add(this.pageSizeUpDown);
             this.Controls.Add(this.repeatsCheckedListBox);
             this.Controls.Add(this.bmarkCheckedListBox);
             this.Controls.Add(this.ratingCheckedListBox);
@@ -161,6 +188,7 @@
             this.Controls.Add(this.gradeLbl);
             this.Name = "ProblemExportForm";
             this.Text = "Problem Exporter";
+            ((System.ComponentModel.ISupportInitialize)(this.pageSizeUpDown)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -179,6 +207,8 @@
         private System.Windows.Forms.CheckedListBox ratingCheckedListBox;
         private System.Windows.Forms.CheckedListBox bmarkCheckedListBox;
         private System.Windows.Forms.CheckedListBox repeatsCheckedListBox;
+        private System.Windows.Forms.NumericUpDown pageSizeUpDown;
+        private System.Windows.Forms.Label pageSizeLbl;
     }
 }
 
