@@ -175,11 +175,34 @@ namespace ProblemExport
                 {
                     NewLine = "\n"
                 };
+                List<int> pageOffsets = new List<int>();
+                int curOffset = 0;
+                string probCountStr = String.Format("{0}", pl.ProblemListEntries.Count);
+                f.WriteLine(probCountStr);
+                curOffset += System.Text.Encoding.UTF8.GetByteCount(probCountStr) + 1;
+
+                string probData;
+                int probCount = 0;
                 foreach (ProblemListEntry ple in pl.ProblemListEntries)
                 {
-                    f.WriteLine(ProblemAsString(ple.Problem));
+                    probData = ProblemAsString(ple.Problem);
+                    f.WriteLine(probData);
+                    if (probCount % pageSizeUpDown.Value == 0)
+                    {
+                        pageOffsets.Add(curOffset);
+                    }
+                    curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
+                    probCount++;
                 }
+                if (probCount != pl.ProblemListEntries.Count)
+                {
+                    StatusTextBox.AppendText("ERROR - mismatching counts\r\n");
+                }
+
+                pageOffsets.Reverse();
+                f.WriteLine(String.Join(":", pageOffsets));
                 f.Close();
+                StatusTextBox.AppendText(String.Format("Wrote {0} problems to {1}\r\n", probCount, dataFileName));
             }
             StatusTextBox.AppendText("Done.\r\n");
         }
