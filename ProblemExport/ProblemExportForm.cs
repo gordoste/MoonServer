@@ -104,13 +104,15 @@ namespace ProblemExport
                     "File Exists", MessageBoxButtons.YesNo);
                 if (owrite == DialogResult.No) { return; }
             }
+            String probData, probCountStr;
+            int probCount;
             StreamWriter f = new StreamWriter(dataFileName)
             {
                 NewLine = "\n"
             };
             foreach (Problem p in matchingProbs)
             {
-                String probData = ProblemAsString(p);
+                probData = ProblemAsString(p);
                 probOffsets.Add(p.MoonID, curOffset);
                 f.WriteLine(probData);
                 curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
@@ -119,25 +121,55 @@ namespace ProblemExport
 
             // Write list file containing problems in order with offset of each one in data file
             string listFileName = String.Format(@"{0}\{1}_name.lst", folder, filterName);
+            List<int> pageOffsets = new List<int>();
             StreamWriter l = new StreamWriter(listFileName)
             {
                 NewLine = "\n"
             };
+
+            probCountStr = String.Format("{0}", matchingProbs.Count());
+            probCount = 0;
+            l.WriteLine(probCountStr);
+            curOffset = System.Text.Encoding.UTF8.GetByteCount(probCountStr) + 1;
+
             foreach (Problem p in matchingProbs.OrderBy(p => p.Name))
             {
-                l.WriteLine(p.MoonID + ":" + probOffsets[p.MoonID]);
+                probData = p.MoonID + ":" + probOffsets[p.MoonID];
+                l.WriteLine(probData);
+                if (probCount % pageSizeUpDown.Value == 0)
+                {
+                    pageOffsets.Add(curOffset);
+                }
+                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
+                probCount++;
             }
+            l.WriteLine(String.Join(":", pageOffsets));
             l.Close();
+
+            pageOffsets.Clear();
+            probCount = 0;
+            curOffset = 0;
 
             listFileName = String.Format(@"{0}\{1}_rpts.lst", folder, filterName);
             l = new StreamWriter(listFileName)
             {
                 NewLine = "\n"
             };
+            probCountStr = String.Format("{0}", matchingProbs.Count());
+            l.WriteLine(probCountStr);
+            curOffset = System.Text.Encoding.UTF8.GetByteCount(probCountStr) + 1;
             foreach (Problem p in matchingProbs.OrderByDescending(p => p.Repeats))
             {
-                l.WriteLine(p.MoonID + ":" + probOffsets[p.MoonID]);
+                probData = p.MoonID + ":" + probOffsets[p.MoonID];
+                l.WriteLine(probData);
+                if (probCount % pageSizeUpDown.Value == 0)
+                {
+                    pageOffsets.Add(curOffset);
+                }
+                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
+                probCount++;
             }
+            l.WriteLine(String.Join(":", pageOffsets));
             l.Close();
 
             StatusTextBox.AppendText("Done\r\n");
@@ -199,7 +231,6 @@ namespace ProblemExport
                     StatusTextBox.AppendText("ERROR - mismatching counts\r\n");
                 }
 
-                pageOffsets.Reverse();
                 f.WriteLine(String.Join(":", pageOffsets));
                 f.Close();
                 StatusTextBox.AppendText(String.Format("Wrote {0} problems to {1}\r\n", probCount, dataFileName));
