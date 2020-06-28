@@ -112,14 +112,14 @@ namespace ProblemExport
             int probCount;
             StreamWriter f = new StreamWriter(dataFileName)
             {
-                NewLine = "\n"
+                NewLine = "\r\n"
             };
             foreach (Problem p in probs)
             {
                 probData = ProblemAsString(p);
                 probOffsets.Add(p.MoonID, curOffset);
                 f.WriteLine(probData);
-                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
+                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + f.NewLine.Length;
             }
             f.Close();
 
@@ -128,13 +128,13 @@ namespace ProblemExport
             List<int> pageOffsets = new List<int>();
             StreamWriter l = new StreamWriter(listFileName)
             {
-                NewLine = "\n"
+                NewLine = "\r\n"
             };
 
             probCountStr = String.Format("{0}", probs.Count());
             probCount = 0;
             l.WriteLine(probCountStr);
-            curOffset = System.Text.Encoding.UTF8.GetByteCount(probCountStr) + 1;
+            curOffset = System.Text.Encoding.UTF8.GetByteCount(probCountStr) + l.NewLine.Length;
 
             foreach (Problem p in probs.OrderBy(p => p.Name))
             {
@@ -144,7 +144,7 @@ namespace ProblemExport
                 {
                     pageOffsets.Add(curOffset);
                 }
-                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
+                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + l.NewLine.Length;
                 probCount++;
             }
             l.WriteLine(String.Join(":", pageOffsets));
@@ -157,11 +157,11 @@ namespace ProblemExport
             listFileName = String.Format(@"{0}\{1}_rpts.lst", folder, filename);
             l = new StreamWriter(listFileName)
             {
-                NewLine = "\n"
+                NewLine = "\r\n"
             };
             probCountStr = String.Format("{0}", probs.Count());
             l.WriteLine(probCountStr);
-            curOffset = System.Text.Encoding.UTF8.GetByteCount(probCountStr) + 1;
+            curOffset = System.Text.Encoding.UTF8.GetByteCount(probCountStr) + l.NewLine.Length;
             foreach (Problem p in probs.OrderByDescending(p => p.Repeats))
             {
                 probData = p.MoonID + ":" + probOffsets[p.MoonID];
@@ -170,7 +170,7 @@ namespace ProblemExport
                 {
                     pageOffsets.Add(curOffset);
                 }
-                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + 1;
+                curOffset += System.Text.Encoding.UTF8.GetByteCount(probData) + l.NewLine.Length;
                 probCount++;
             }
             l.WriteLine(String.Join(":", pageOffsets));
